@@ -23,6 +23,13 @@ Service extraction can happen later around natural seams:
 - Deployment: Docker Compose for development
 - Architecture: modular monolith with app-level domain boundaries
 
+Architecture decision records live in `docs/adr/`. These capture intentional
+MVP compromises and the triggers for revisiting them.
+
+Current ADRs:
+
+- `0001-database-backed-access-token-blocklist.md`
+
 ## Initial Domains
 
 - `accounts`: users, roles, facility assignment
@@ -52,4 +59,3 @@ or operationally credible.
 6. CHW task assignment
 7. Notification provider abstraction
 8. Dashboards and analytics endpoints
-

@@ -1,11 +1,12 @@
 """Django settings for the ShieldTB backend."""
 
+from datetime import timedelta
 from pathlib import Path
 
 import dj_database_url
 from dotenv import load_dotenv
 
-from .utils import env_bool, env_list
+from .utils import env, env_bool, env_list
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -24,6 +25,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "corsheaders",
     "rest_framework",
+    "rest_framework_simplejwt.token_blacklist",
     "apps.core",
     "apps.facilities",
     "apps.accounts",
@@ -98,8 +100,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "apps.accounts.authentication.CookieJWTAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
-        "rest_framework.authentication.BasicAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
@@ -109,3 +112,23 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS", [])
 CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS", [])
 
+JWT_AUTH_COOKIE = "shieldtb_access"
+JWT_REFRESH_COOKIE = "shieldtb_refresh"
+JWT_COOKIE_SECURE = env_bool("JWT_COOKIE_SECURE", default=not DEBUG)
+JWT_COOKIE_SAMESITE = env("JWT_COOKIE_SAMESITE", "Strict")
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,
+    "ALGORITHM": env("JWT_ALGORITHM", "HS256"),
+    "SIGNING_KEY": env("JWT_SIGNING_KEY", SECRET_KEY),
+    "VERIFYING_KEY": env("JWT_VERIFYING_KEY", ""),
+    "AUDIENCE": env("JWT_AUDIENCE", "shieldtb-api"),
+    "ISSUER": env("JWT_ISSUER", "shieldtb-auth"),
+    "AUTH_HEADER_TYPES": ("Bearer",),
+    "JTI_CLAIM": "jti",
+    "LEEWAY": 0,
+}
