@@ -72,7 +72,7 @@ ASGI_APPLICATION = "config.asgi.application"
 
 DATABASES = {
     "default": dj_database_url.config(
-        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
+        default="postgres://shieldtb:shieldtb@localhost:5432/shieldtb",
         conn_max_age=600,
     )
 }
