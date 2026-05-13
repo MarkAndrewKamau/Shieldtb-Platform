@@ -29,6 +29,7 @@ MVP compromises and the triggers for revisiting them.
 Current ADRs:
 
 - `0001-database-backed-access-token-blocklist.md`
+- `0002-postgresql-as-primary-database.md`
 
 ## Initial Domains
 
