@@ -3,6 +3,19 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
+class LoginRequestSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
+
+class RefreshRequestSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+
+class DetailSerializer(serializers.Serializer):
+    detail = serializers.CharField()
+
+
 class ShieldTBTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
@@ -60,3 +73,43 @@ class UserSerializer(serializers.ModelSerializer):
             instance.must_reset_password = False
         instance.save()
         return instance
+
+
+class SignupSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(write_only=True, min_length=12)
+
+    class Meta:
+        model = get_user_model()
+        fields = [
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "role",
+            "facility",
+            "phone",
+            "password",
+        ]
+        read_only_fields = ["id"]
+        extra_kwargs = {
+            "facility": {"required": True},
+        }
+
+    def validate_role(self, value):
+        if value == self.Meta.model.Role.ADMIN:
+            raise serializers.ValidationError("Admin accounts cannot be created via public signup.")
+        return value
+
+    def create(self, validated_data):
+        password = validated_data.pop("password")
+        user = self.Meta.model(**validated_data)
+        user.set_password(password)
+        user.is_active = True
+        user.must_reset_password = False
+        user.save()
+        return user
+
+
+class UserEnvelopeSerializer(serializers.Serializer):
+    user = UserSerializer()

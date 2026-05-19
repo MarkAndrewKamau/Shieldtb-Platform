@@ -1,6 +1,7 @@
 from django.db import models
 
 from apps.core.models import TimeStampedModel
+from apps.households.choices import HouseholdContactScreeningStatus
 
 
 class Household(TimeStampedModel):
@@ -33,13 +34,7 @@ class Household(TimeStampedModel):
 
 
 class HouseholdContact(TimeStampedModel):
-    class ScreeningStatus(models.TextChoices):
-        PENDING = "pending", "Pending screening"
-        SCREENED = "screened", "Screened"
-        REFERRED = "referred", "Referred"
-        STARTED_TPT = "started_tpt", "Started TPT"
-        MISSED_FOLLOW_UP = "missed_follow_up", "Missed follow-up"
-        COMPLETED = "completed", "Completed"
+    ScreeningStatus = HouseholdContactScreeningStatus
 
     household = models.ForeignKey(Household, on_delete=models.CASCADE, related_name="contacts")
     patient = models.ForeignKey(
@@ -56,8 +51,8 @@ class HouseholdContact(TimeStampedModel):
     immunocompromised = models.BooleanField(default=False)
     status = models.CharField(
         max_length=32,
-        choices=ScreeningStatus.choices,
-        default=ScreeningStatus.PENDING,
+        choices=HouseholdContactScreeningStatus.choices,
+        default=HouseholdContactScreeningStatus.PENDING,
     )
 
     class Meta:
@@ -65,4 +60,3 @@ class HouseholdContact(TimeStampedModel):
 
     def __str__(self) -> str:
         return self.full_name
-

@@ -1,5 +1,7 @@
 from rest_framework.permissions import SAFE_METHODS, BasePermission
 
+CARE_TEAM_ROLES = {"admin", "clinician", "facility_officer"}
+
 
 class IsAdmin(BasePermission):
     def has_permission(self, request, view) -> bool:
@@ -16,6 +18,10 @@ class IsAdminOrReadOnly(BasePermission):
 class CanManageUsers(BasePermission):
     def has_permission(self, request, view) -> bool:
         return bool(request.user and request.user.is_authenticated and request.user.role == "admin")
+
+
+def is_care_team_member(user) -> bool:
+    return bool(user and user.is_authenticated and user.role in CARE_TEAM_ROLES)
 
 
 def user_can_access_facility(user, facility_id: int | None) -> bool:
