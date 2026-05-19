@@ -72,3 +72,5 @@ python manage.py export_api_artifacts
 
 This produces a schema plus ready-to-share Postman files in
 `backend/docs/generated/`.
+
+Team import and sharing steps live in `docs/api-sharing.md`.
