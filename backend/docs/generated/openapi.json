@@ -1,0 +1,3907 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "ShieldTB Backend API",
+    "version": "0.1.0",
+    "description": "API for ShieldTB Kenya clinical workflows, patient registry, risk scoring, and facility-scoped operations."
+  },
+  "paths": {
+    "/api/v1/auth/login/": {
+      "post": {
+        "operationId": "auth_login_create",
+        "description": "Authenticates a user and sets HttpOnly JWT cookies.",
+        "summary": "Log in",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequestRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequestRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserEnvelope"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/auth/logout/": {
+      "post": {
+        "operationId": "auth_logout_create",
+        "description": "Revokes the current access token and blacklists the refresh token when provided.",
+        "summary": "Log out",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequestRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequestRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Detail"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/auth/me/": {
+      "get": {
+        "operationId": "auth_me_retrieve",
+        "description": "Returns the authenticated user profile.",
+        "summary": "Current user",
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/auth/refresh/": {
+      "post": {
+        "operationId": "auth_refresh_create",
+        "description": "Rotates the refresh token and updates HttpOnly JWT cookies.",
+        "summary": "Refresh token",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequestRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequestRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequestRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Detail"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/auth/signup/": {
+      "post": {
+        "operationId": "auth_signup_create",
+        "description": "Creates a non-admin user account and sets HttpOnly JWT cookies.",
+        "summary": "Sign up",
+        "tags": [
+          "Auth"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignupRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/SignupRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/SignupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserEnvelope"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/clinical/encounters/": {
+      "get": {
+        "operationId": "clinical_encounters_list",
+        "summary": "List clinical encounters",
+        "tags": [
+          "Clinical"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ClinicalEncounter"
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/clinical/encounters/{id}/": {
+      "get": {
+        "operationId": "clinical_encounters_retrieve",
+        "summary": "Retrieve clinical encounter",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this clinical encounter.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Clinical"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClinicalEncounter"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/clinical/intakes/": {
+      "post": {
+        "operationId": "clinical_intakes_create",
+        "summary": "Create structured intake",
+        "tags": [
+          "Clinical"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IntakeCreateRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/IntakeCreateRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/IntakeCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IntakeCreate"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/facilities/": {
+      "get": {
+        "operationId": "facilities_list",
+        "summary": "List facilities",
+        "tags": [
+          "Facilities"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Facility"
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "operationId": "facilities_create",
+        "summary": "Create facility",
+        "tags": [
+          "Facilities"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FacilityRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/FacilityRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/FacilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Facility"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/facilities/{id}/": {
+      "get": {
+        "operationId": "facilities_retrieve",
+        "summary": "Retrieve facility",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this facility.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Facilities"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Facility"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "operationId": "facilities_update",
+        "summary": "Update facility",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this facility.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Facilities"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FacilityRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/FacilityRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/FacilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Facility"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "patch": {
+        "operationId": "facilities_partial_update",
+        "summary": "Partially update facility",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this facility.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Facilities"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedFacilityRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedFacilityRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedFacilityRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Facility"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "operationId": "facilities_destroy",
+        "summary": "Delete facility",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this facility.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Facilities"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/api/v1/household-contacts/": {
+      "get": {
+        "operationId": "household_contacts_list",
+        "summary": "List household contacts",
+        "tags": [
+          "Households"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/HouseholdContact"
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "operationId": "household_contacts_create",
+        "summary": "Create household contact",
+        "tags": [
+          "Households"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HouseholdContactRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/HouseholdContactRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/HouseholdContactRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HouseholdContact"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/household-contacts/{id}/": {
+      "get": {
+        "operationId": "household_contacts_retrieve",
+        "summary": "Retrieve household contact",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this household contact.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Households"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HouseholdContact"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "operationId": "household_contacts_update",
+        "summary": "Update household contact",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this household contact.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Households"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HouseholdContactRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/HouseholdContactRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/HouseholdContactRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HouseholdContact"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "patch": {
+        "operationId": "household_contacts_partial_update",
+        "summary": "Partially update household contact",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this household contact.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Households"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedHouseholdContactRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedHouseholdContactRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedHouseholdContactRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HouseholdContact"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "operationId": "household_contacts_destroy",
+        "summary": "Delete household contact",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this household contact.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Households"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/api/v1/households/": {
+      "get": {
+        "operationId": "households_list",
+        "summary": "List households",
+        "tags": [
+          "Households"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Household"
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "operationId": "households_create",
+        "summary": "Create household trace",
+        "tags": [
+          "Households"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HouseholdRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/HouseholdRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/HouseholdRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Household"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/households/{id}/": {
+      "get": {
+        "operationId": "households_retrieve",
+        "summary": "Retrieve household",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this household.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Households"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Household"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "operationId": "households_update",
+        "summary": "Update household",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this household.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Households"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HouseholdRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/HouseholdRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/HouseholdRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Household"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "patch": {
+        "operationId": "households_partial_update",
+        "summary": "Partially update household",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this household.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Households"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedHouseholdRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedHouseholdRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedHouseholdRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Household"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "operationId": "households_destroy",
+        "summary": "Delete household",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this household.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Households"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/api/v1/patients/": {
+      "get": {
+        "operationId": "patients_list",
+        "summary": "List patients",
+        "tags": [
+          "Patients"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Patient"
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "operationId": "patients_create",
+        "summary": "Create patient",
+        "tags": [
+          "Patients"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatientRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/PatientRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PatientRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Patient"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/patients/{id}/": {
+      "get": {
+        "operationId": "patients_retrieve",
+        "summary": "Retrieve patient",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this patient.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Patients"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Patient"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "operationId": "patients_update",
+        "summary": "Update patient",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this patient.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Patients"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatientRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/PatientRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PatientRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Patient"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "patch": {
+        "operationId": "patients_partial_update",
+        "summary": "Partially update patient",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this patient.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Patients"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedPatientRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedPatientRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedPatientRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Patient"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "operationId": "patients_destroy",
+        "summary": "Deactivate patient",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this patient.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Patients"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/api/v1/risk-assessments/": {
+      "get": {
+        "operationId": "risk_assessments_list",
+        "summary": "List risk assessments",
+        "tags": [
+          "Risk"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RiskAssessment"
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/risk-assessments/{id}/": {
+      "get": {
+        "operationId": "risk_assessments_retrieve",
+        "summary": "Retrieve risk assessment",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this risk assessment.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Risk"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiskAssessment"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/users/": {
+      "get": {
+        "operationId": "users_list",
+        "summary": "List users",
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/User"
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "post": {
+        "operationId": "users_create",
+        "summary": "Create user",
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/users/{id}/": {
+      "get": {
+        "operationId": "users_retrieve",
+        "summary": "Retrieve user",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this user.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "put": {
+        "operationId": "users_update",
+        "summary": "Update user",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this user.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "patch": {
+        "operationId": "users_partial_update",
+        "summary": "Partially update user",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this user.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Users"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedUserRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedUserRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedUserRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      },
+      "delete": {
+        "operationId": "users_destroy",
+        "summary": "Delete user",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this user.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Users"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        }
+      }
+    },
+    "/api/v1/users/{id}/deactivate/": {
+      "post": {
+        "operationId": "users_deactivate_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this user.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "users"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/workflow-tasks/": {
+      "get": {
+        "operationId": "workflow_tasks_list",
+        "summary": "List workflow tasks",
+        "tags": [
+          "Tasks"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkflowTask"
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/workflow-tasks/{id}/": {
+      "get": {
+        "operationId": "workflow_tasks_retrieve",
+        "summary": "Retrieve workflow task",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this workflow task.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Tasks"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowTask"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/workflow-tasks/{id}/assign/": {
+      "post": {
+        "operationId": "workflow_tasks_assign_create",
+        "summary": "Assign workflow task",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this workflow task.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Tasks"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowTaskAssignmentRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowTaskAssignmentRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowTaskAssignmentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowTask"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/workflow-tasks/{id}/update_status/": {
+      "post": {
+        "operationId": "workflow_tasks_update_status_create",
+        "summary": "Update workflow task status",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this workflow task.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Tasks"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowTaskStatusRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowTaskStatusRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowTaskStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowTask"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ClinicalEncounter": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "patient": {
+            "type": "integer"
+          },
+          "patient_name": {
+            "type": "string",
+            "readOnly": true
+          },
+          "facility": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "encounter_type": {
+            "$ref": "#/components/schemas/EncounterTypeEnum"
+          },
+          "recorded_by": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "intake": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ClinicalIntake"
+              }
+            ],
+            "readOnly": true
+          },
+          "risk_assessment": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RiskAssessment"
+              }
+            ],
+            "readOnly": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "created_at",
+          "encounter_type",
+          "facility",
+          "id",
+          "intake",
+          "occurred_at",
+          "patient",
+          "patient_name",
+          "recorded_by",
+          "risk_assessment",
+          "updated_at"
+        ]
+      },
+      "ClinicalIntake": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "cough": {
+            "type": "boolean"
+          },
+          "fever": {
+            "type": "boolean"
+          },
+          "night_sweats": {
+            "type": "boolean"
+          },
+          "weight_loss": {
+            "type": "boolean"
+          },
+          "hiv_positive": {
+            "type": "boolean"
+          },
+          "pregnant": {
+            "type": "boolean"
+          },
+          "postpartum": {
+            "type": "boolean"
+          },
+          "diabetes": {
+            "type": "boolean"
+          },
+          "sle_or_autoimmune": {
+            "type": "boolean"
+          },
+          "ckd": {
+            "type": "boolean"
+          },
+          "on_immunosuppressants": {
+            "type": "boolean"
+          },
+          "previous_tb": {
+            "type": "boolean"
+          },
+          "household_tb_contact": {
+            "type": "boolean"
+          },
+          "crowded_housing": {
+            "type": "boolean"
+          },
+          "poor_ventilation": {
+            "type": "boolean"
+          },
+          "medication_history": {},
+          "has_who_tb_symptom": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "created_at",
+          "has_who_tb_symptom",
+          "id",
+          "updated_at"
+        ]
+      },
+      "Detail": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail"
+        ]
+      },
+      "EncounterTypeEnum": {
+        "enum": [
+          "intake",
+          "follow_up",
+          "household_screening",
+          "adr_report"
+        ],
+        "type": "string",
+        "description": "* `intake` - Intake\n* `follow_up` - Follow-up\n* `household_screening` - Household screening\n* `adr_report` - ADR report"
+      },
+      "EnrollmentSourceEnum": {
+        "enum": [
+          "art_clinic",
+          "anc",
+          "dispensary",
+          "community",
+          "self_referral",
+          "lab"
+        ],
+        "type": "string",
+        "description": "* `art_clinic` - ART clinic\n* `anc` - Antenatal care\n* `dispensary` - Dispensary\n* `community` - Community\n* `self_referral` - Self-referral\n* `lab` - Laboratory"
+      },
+      "Facility": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "facility_type": {
+            "$ref": "#/components/schemas/FacilityTypeEnum"
+          },
+          "county": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "sub_county": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "ward": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "code",
+          "created_at",
+          "facility_type",
+          "id",
+          "name",
+          "updated_at"
+        ]
+      },
+      "FacilityRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "facility_type": {
+            "$ref": "#/components/schemas/FacilityTypeEnum"
+          },
+          "county": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "sub_county": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "ward": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "is_active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "code",
+          "facility_type",
+          "name"
+        ]
+      },
+      "FacilityTypeEnum": {
+        "enum": [
+          "dispensary",
+          "health_centre",
+          "hospital",
+          "lab",
+          "community_unit"
+        ],
+        "type": "string",
+        "description": "* `dispensary` - Dispensary\n* `health_centre` - Health centre\n* `hospital` - Hospital\n* `lab` - Laboratory\n* `community_unit` - Community unit"
+      },
+      "Household": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "index_patient": {
+            "type": "integer"
+          },
+          "index_patient_name": {
+            "type": "string",
+            "readOnly": true
+          },
+          "facility": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "county": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "sub_county": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "ward": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "village": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "address_description": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "string",
+            "format": "decimal",
+            "pattern": "^-?\\d{0,3}(?:\\.\\d{0,6})?$",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "string",
+            "format": "decimal",
+            "pattern": "^-?\\d{0,3}(?:\\.\\d{0,6})?$",
+            "nullable": true
+          },
+          "assigned_chw": {
+            "type": "integer",
+            "nullable": true
+          },
+          "assigned_chw_name": {
+            "type": "string",
+            "readOnly": true
+          },
+          "contacts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HouseholdContact"
+            },
+            "readOnly": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "assigned_chw_name",
+          "contacts",
+          "created_at",
+          "facility",
+          "id",
+          "index_patient",
+          "index_patient_name",
+          "updated_at"
+        ]
+      },
+      "HouseholdContact": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "household": {
+            "type": "integer"
+          },
+          "household_id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "patient": {
+            "type": "integer",
+            "nullable": true
+          },
+          "patient_name": {
+            "type": "string",
+            "readOnly": true
+          },
+          "full_name": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "age_years": {
+            "type": "integer",
+            "maximum": 32767,
+            "minimum": 0,
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "relationship_to_index": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "immunocompromised": {
+            "type": "boolean"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status9a8Enum"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "created_at",
+          "full_name",
+          "household",
+          "household_id",
+          "id",
+          "patient_name",
+          "updated_at"
+        ]
+      },
+      "HouseholdContactRequest": {
+        "type": "object",
+        "properties": {
+          "household": {
+            "type": "integer"
+          },
+          "patient": {
+            "type": "integer",
+            "nullable": true
+          },
+          "full_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "age_years": {
+            "type": "integer",
+            "maximum": 32767,
+            "minimum": 0,
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "relationship_to_index": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "immunocompromised": {
+            "type": "boolean"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status9a8Enum"
+          }
+        },
+        "required": [
+          "full_name",
+          "household"
+        ]
+      },
+      "HouseholdContactWrite": {
+        "type": "object",
+        "properties": {
+          "patient": {
+            "type": "integer",
+            "nullable": true
+          },
+          "full_name": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "age_years": {
+            "type": "integer",
+            "maximum": 32767,
+            "minimum": 0,
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "relationship_to_index": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "immunocompromised": {
+            "type": "boolean"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status9a8Enum"
+          }
+        },
+        "required": [
+          "full_name"
+        ]
+      },
+      "HouseholdContactWriteRequest": {
+        "type": "object",
+        "properties": {
+          "patient": {
+            "type": "integer",
+            "nullable": true
+          },
+          "full_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "age_years": {
+            "type": "integer",
+            "maximum": 32767,
+            "minimum": 0,
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "relationship_to_index": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "immunocompromised": {
+            "type": "boolean"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status9a8Enum"
+          }
+        },
+        "required": [
+          "full_name"
+        ]
+      },
+      "HouseholdRequest": {
+        "type": "object",
+        "properties": {
+          "index_patient": {
+            "type": "integer"
+          },
+          "county": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "sub_county": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "ward": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "village": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "address_description": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "string",
+            "format": "decimal",
+            "pattern": "^-?\\d{0,3}(?:\\.\\d{0,6})?$",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "string",
+            "format": "decimal",
+            "pattern": "^-?\\d{0,3}(?:\\.\\d{0,6})?$",
+            "nullable": true
+          },
+          "assigned_chw": {
+            "type": "integer",
+            "nullable": true
+          },
+          "contact_entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HouseholdContactWriteRequest"
+            },
+            "writeOnly": true
+          }
+        },
+        "required": [
+          "index_patient"
+        ]
+      },
+      "IntakeCreate": {
+        "type": "object",
+        "properties": {
+          "patient": {
+            "type": "integer"
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "cough": {
+            "type": "boolean",
+            "default": false
+          },
+          "fever": {
+            "type": "boolean",
+            "default": false
+          },
+          "night_sweats": {
+            "type": "boolean",
+            "default": false
+          },
+          "weight_loss": {
+            "type": "boolean",
+            "default": false
+          },
+          "hiv_positive": {
+            "type": "boolean",
+            "default": false
+          },
+          "pregnant": {
+            "type": "boolean",
+            "default": false
+          },
+          "postpartum": {
+            "type": "boolean",
+            "default": false
+          },
+          "diabetes": {
+            "type": "boolean",
+            "default": false
+          },
+          "sle_or_autoimmune": {
+            "type": "boolean",
+            "default": false
+          },
+          "ckd": {
+            "type": "boolean",
+            "default": false
+          },
+          "on_immunosuppressants": {
+            "type": "boolean",
+            "default": false
+          },
+          "previous_tb": {
+            "type": "boolean",
+            "default": false
+          },
+          "household_tb_contact": {
+            "type": "boolean",
+            "default": false
+          },
+          "crowded_housing": {
+            "type": "boolean",
+            "default": false
+          },
+          "poor_ventilation": {
+            "type": "boolean",
+            "default": false
+          },
+          "medication_history": {}
+        },
+        "required": [
+          "occurred_at",
+          "patient"
+        ]
+      },
+      "IntakeCreateRequest": {
+        "type": "object",
+        "properties": {
+          "patient": {
+            "type": "integer"
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "cough": {
+            "type": "boolean",
+            "default": false
+          },
+          "fever": {
+            "type": "boolean",
+            "default": false
+          },
+          "night_sweats": {
+            "type": "boolean",
+            "default": false
+          },
+          "weight_loss": {
+            "type": "boolean",
+            "default": false
+          },
+          "hiv_positive": {
+            "type": "boolean",
+            "default": false
+          },
+          "pregnant": {
+            "type": "boolean",
+            "default": false
+          },
+          "postpartum": {
+            "type": "boolean",
+            "default": false
+          },
+          "diabetes": {
+            "type": "boolean",
+            "default": false
+          },
+          "sle_or_autoimmune": {
+            "type": "boolean",
+            "default": false
+          },
+          "ckd": {
+            "type": "boolean",
+            "default": false
+          },
+          "on_immunosuppressants": {
+            "type": "boolean",
+            "default": false
+          },
+          "previous_tb": {
+            "type": "boolean",
+            "default": false
+          },
+          "household_tb_contact": {
+            "type": "boolean",
+            "default": false
+          },
+          "crowded_housing": {
+            "type": "boolean",
+            "default": false
+          },
+          "poor_ventilation": {
+            "type": "boolean",
+            "default": false
+          },
+          "medication_history": {}
+        },
+        "required": [
+          "occurred_at",
+          "patient"
+        ]
+      },
+      "LoginRequestRequest": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 1
+          },
+          "password": {
+            "type": "string",
+            "writeOnly": true,
+            "minLength": 1
+          }
+        },
+        "required": [
+          "password",
+          "username"
+        ]
+      },
+      "PatchedFacilityRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "facility_type": {
+            "$ref": "#/components/schemas/FacilityTypeEnum"
+          },
+          "county": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "sub_county": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "ward": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "is_active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PatchedHouseholdContactRequest": {
+        "type": "object",
+        "properties": {
+          "household": {
+            "type": "integer"
+          },
+          "patient": {
+            "type": "integer",
+            "nullable": true
+          },
+          "full_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "age_years": {
+            "type": "integer",
+            "maximum": 32767,
+            "minimum": 0,
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "relationship_to_index": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "immunocompromised": {
+            "type": "boolean"
+          },
+          "status": {
+            "$ref": "#/components/schemas/Status9a8Enum"
+          }
+        }
+      },
+      "PatchedHouseholdRequest": {
+        "type": "object",
+        "properties": {
+          "index_patient": {
+            "type": "integer"
+          },
+          "county": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "sub_county": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "ward": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "village": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "address_description": {
+            "type": "string"
+          },
+          "latitude": {
+            "type": "string",
+            "format": "decimal",
+            "pattern": "^-?\\d{0,3}(?:\\.\\d{0,6})?$",
+            "nullable": true
+          },
+          "longitude": {
+            "type": "string",
+            "format": "decimal",
+            "pattern": "^-?\\d{0,3}(?:\\.\\d{0,6})?$",
+            "nullable": true
+          },
+          "assigned_chw": {
+            "type": "integer",
+            "nullable": true
+          },
+          "contact_entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HouseholdContactWriteRequest"
+            },
+            "writeOnly": true
+          }
+        }
+      },
+      "PatchedPatientRequest": {
+        "type": "object",
+        "properties": {
+          "external_id": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 100
+          },
+          "given_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 150
+          },
+          "family_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 150
+          },
+          "date_of_birth": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "sex": {
+            "$ref": "#/components/schemas/SexEnum"
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "national_id_hash": {
+            "type": "string",
+            "writeOnly": true,
+            "maxLength": 128
+          },
+          "facility": {
+            "type": "integer"
+          },
+          "enrollment_source": {
+            "$ref": "#/components/schemas/EnrollmentSourceEnum"
+          },
+          "consented_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PatchedUserRequest": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
+            "pattern": "^[\\w.@+-]+$",
+            "maxLength": 150
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email address",
+            "maxLength": 254
+          },
+          "first_name": {
+            "type": "string",
+            "maxLength": 150
+          },
+          "last_name": {
+            "type": "string",
+            "maxLength": 150
+          },
+          "role": {
+            "$ref": "#/components/schemas/RoleEnum"
+          },
+          "facility": {
+            "type": "integer",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Active",
+            "description": "Designates whether this user should be treated as active. Unselect this instead of deleting accounts."
+          },
+          "must_reset_password": {
+            "type": "boolean"
+          },
+          "password": {
+            "type": "string",
+            "writeOnly": true,
+            "minLength": 12
+          }
+        }
+      },
+      "Patient": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "external_id": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 100
+          },
+          "given_name": {
+            "type": "string",
+            "maxLength": 150
+          },
+          "family_name": {
+            "type": "string",
+            "maxLength": 150
+          },
+          "full_name": {
+            "type": "string",
+            "readOnly": true
+          },
+          "date_of_birth": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "sex": {
+            "$ref": "#/components/schemas/SexEnum"
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "facility": {
+            "type": "integer"
+          },
+          "enrollment_source": {
+            "$ref": "#/components/schemas/EnrollmentSourceEnum"
+          },
+          "consented_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "consent_recorded_by": {
+            "type": "integer",
+            "readOnly": true,
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "consent_recorded_by",
+          "created_at",
+          "facility",
+          "family_name",
+          "full_name",
+          "given_name",
+          "id",
+          "updated_at"
+        ]
+      },
+      "PatientRequest": {
+        "type": "object",
+        "properties": {
+          "external_id": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 100
+          },
+          "given_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 150
+          },
+          "family_name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 150
+          },
+          "date_of_birth": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "sex": {
+            "$ref": "#/components/schemas/SexEnum"
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "national_id_hash": {
+            "type": "string",
+            "writeOnly": true,
+            "maxLength": 128
+          },
+          "facility": {
+            "type": "integer"
+          },
+          "enrollment_source": {
+            "$ref": "#/components/schemas/EnrollmentSourceEnum"
+          },
+          "consented_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "is_active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "facility",
+          "family_name",
+          "given_name"
+        ]
+      },
+      "RefreshRequestRequest": {
+        "type": "object",
+        "properties": {
+          "refresh": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "refresh"
+        ]
+      },
+      "RiskAssessment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "patient": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "patient_name": {
+            "type": "string",
+            "readOnly": true
+          },
+          "encounter": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "score": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "tier": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TierEnum"
+              }
+            ],
+            "readOnly": true
+          },
+          "explanation": {
+            "readOnly": true
+          },
+          "model_version": {
+            "type": "string",
+            "readOnly": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "created_at",
+          "encounter",
+          "explanation",
+          "id",
+          "model_version",
+          "patient",
+          "patient_name",
+          "score",
+          "tier",
+          "updated_at"
+        ]
+      },
+      "RoleEnum": {
+        "enum": [
+          "admin",
+          "clinician",
+          "chw",
+          "facility_officer",
+          "analyst"
+        ],
+        "type": "string",
+        "description": "* `admin` - Admin\n* `clinician` - Clinician\n* `chw` - Community health worker\n* `facility_officer` - Facility officer\n* `analyst` - Analyst"
+      },
+      "SexEnum": {
+        "enum": [
+          "female",
+          "male",
+          "intersex",
+          "unknown"
+        ],
+        "type": "string",
+        "description": "* `female` - Female\n* `male` - Male\n* `intersex` - Intersex\n* `unknown` - Unknown"
+      },
+      "SignupRequest": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
+            "pattern": "^[\\w.@+-]+$",
+            "maxLength": 150
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email address",
+            "maxLength": 254
+          },
+          "first_name": {
+            "type": "string",
+            "maxLength": 150
+          },
+          "last_name": {
+            "type": "string",
+            "maxLength": 150
+          },
+          "role": {
+            "$ref": "#/components/schemas/RoleEnum"
+          },
+          "facility": {
+            "type": "integer",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "password": {
+            "type": "string",
+            "writeOnly": true,
+            "minLength": 12
+          }
+        },
+        "required": [
+          "facility",
+          "password",
+          "username"
+        ]
+      },
+      "Status955Enum": {
+        "enum": [
+          "open",
+          "in_progress",
+          "blocked",
+          "completed",
+          "cancelled"
+        ],
+        "type": "string",
+        "description": "* `open` - Open\n* `in_progress` - In progress\n* `blocked` - Blocked\n* `completed` - Completed\n* `cancelled` - Cancelled"
+      },
+      "Status9a8Enum": {
+        "enum": [
+          "pending",
+          "screened",
+          "referred",
+          "started_tpt",
+          "missed_follow_up",
+          "completed"
+        ],
+        "type": "string",
+        "description": "* `pending` - Pending screening\n* `screened` - Screened\n* `referred` - Referred\n* `started_tpt` - Started TPT\n* `missed_follow_up` - Missed follow-up\n* `completed` - Completed"
+      },
+      "TaskTypeEnum": {
+        "enum": [
+          "household_screening",
+          "patient_follow_up",
+          "postpartum_check_in",
+          "adr_triage",
+          "tpt_eligibility_review"
+        ],
+        "type": "string",
+        "description": "* `household_screening` - Household screening\n* `patient_follow_up` - Patient follow-up\n* `postpartum_check_in` - Postpartum check-in\n* `adr_triage` - ADR triage\n* `tpt_eligibility_review` - TPT eligibility review"
+      },
+      "TierEnum": {
+        "enum": [
+          "low",
+          "moderate",
+          "high",
+          "critical"
+        ],
+        "type": "string",
+        "description": "* `low` - Low\n* `moderate` - Moderate\n* `high` - High\n* `critical` - Critical"
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "username": {
+            "type": "string",
+            "description": "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
+            "pattern": "^[\\w.@+-]+$",
+            "maxLength": 150
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email address",
+            "maxLength": 254
+          },
+          "first_name": {
+            "type": "string",
+            "maxLength": 150
+          },
+          "last_name": {
+            "type": "string",
+            "maxLength": 150
+          },
+          "role": {
+            "$ref": "#/components/schemas/RoleEnum"
+          },
+          "facility": {
+            "type": "integer",
+            "nullable": true
+          },
+          "facility_id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Active",
+            "description": "Designates whether this user should be treated as active. Unselect this instead of deleting accounts."
+          },
+          "must_reset_password": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "facility_id",
+          "id",
+          "username"
+        ]
+      },
+      "UserEnvelope": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        },
+        "required": [
+          "user"
+        ]
+      },
+      "UserRequest": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.",
+            "pattern": "^[\\w.@+-]+$",
+            "maxLength": 150
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email address",
+            "maxLength": 254
+          },
+          "first_name": {
+            "type": "string",
+            "maxLength": 150
+          },
+          "last_name": {
+            "type": "string",
+            "maxLength": 150
+          },
+          "role": {
+            "$ref": "#/components/schemas/RoleEnum"
+          },
+          "facility": {
+            "type": "integer",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "maxLength": 32
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Active",
+            "description": "Designates whether this user should be treated as active. Unselect this instead of deleting accounts."
+          },
+          "must_reset_password": {
+            "type": "boolean"
+          },
+          "password": {
+            "type": "string",
+            "writeOnly": true,
+            "minLength": 12
+          }
+        },
+        "required": [
+          "username"
+        ]
+      },
+      "WorkflowTask": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "task_type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TaskTypeEnum"
+              }
+            ],
+            "readOnly": true
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Status955Enum"
+              }
+            ],
+            "readOnly": true
+          },
+          "patient": {
+            "type": "integer",
+            "readOnly": true,
+            "nullable": true
+          },
+          "patient_name": {
+            "type": "string",
+            "readOnly": true
+          },
+          "household": {
+            "type": "integer",
+            "readOnly": true,
+            "nullable": true
+          },
+          "household_id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "assigned_to": {
+            "type": "integer",
+            "readOnly": true,
+            "nullable": true
+          },
+          "assigned_to_name": {
+            "type": "string",
+            "readOnly": true
+          },
+          "due_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "nullable": true
+          },
+          "completed_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "readOnly": true
+          },
+          "description": {
+            "type": "string",
+            "readOnly": true
+          },
+          "metadata": {
+            "readOnly": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "assigned_to",
+          "assigned_to_name",
+          "completed_at",
+          "created_at",
+          "description",
+          "due_at",
+          "household",
+          "household_id",
+          "id",
+          "metadata",
+          "patient",
+          "patient_name",
+          "status",
+          "task_type",
+          "title",
+          "updated_at"
+        ]
+      },
+      "WorkflowTaskAssignmentRequest": {
+        "type": "object",
+        "properties": {
+          "assigned_to": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "assigned_to"
+        ]
+      },
+      "WorkflowTaskStatusRequest": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/Status955Enum"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      }
+    },
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      },
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "sessionid"
+      },
+      "jwtAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Authentication and session lifecycle."
+    },
+    {
+      "name": "Facilities",
+      "description": "Facility registry and administration."
+    },
+    {
+      "name": "Users",
+      "description": "User administration."
+    },
+    {
+      "name": "Patients",
+      "description": "Patient registry."
+    },
+    {
+      "name": "Households",
+      "description": "Household tracing and contact management."
+    },
+    {
+      "name": "Clinical",
+      "description": "Clinical encounters and structured intake."
+    },
+    {
+      "name": "Risk",
+      "description": "Risk assessments derived from intake data."
+    },
+    {
+      "name": "Tasks",
+      "description": "Workflow tasks for CHWs and care-team staff."
+    }
+  ]
+}
