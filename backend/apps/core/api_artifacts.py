@@ -5,7 +5,262 @@ from pathlib import Path
 
 from drf_spectacular.generators import SchemaGenerator
 
-TAG_ORDER = ["Auth", "Facilities", "Users", "Patients", "Households", "Clinical", "Risk", "Tasks"]
+TAG_ORDER = [
+    "Health",
+    "Auth",
+    "Facilities",
+    "Users",
+    "Patients",
+    "Households",
+    "Clinical",
+    "Risk",
+    "Tasks",
+]
+
+RAW_MARKER_PREFIX = "__POSTMAN_RAW__"
+RAW_MARKER_SUFFIX = "__"
+
+
+def raw_variable(name: str) -> str:
+    return f"{RAW_MARKER_PREFIX}{{{{{name}}}}}{RAW_MARKER_SUFFIX}"
+
+POSTMAN_VARIABLES = [
+    ("baseUrl", "http://localhost:8000", "default"),
+    ("username", "", "default"),
+    ("password", "", "secret"),
+    ("email", "", "default"),
+    ("accessToken", "", "secret"),
+    ("refreshToken", "", "secret"),
+    ("facilityId", "", "default"),
+    ("patientId", "", "default"),
+    ("encounterId", "", "default"),
+    ("userId", "", "default"),
+    ("householdId", "", "default"),
+    ("contactId", "", "default"),
+]
+
+REQUEST_BODY_OVERRIDES = {
+    ("POST", "/api/v1/auth/login/"): {
+        "username": "{{username}}",
+        "password": "{{password}}",
+    },
+    ("POST", "/api/v1/auth/refresh/"): {
+        "refresh": "{{refreshToken}}",
+    },
+    ("POST", "/api/v1/auth/logout/"): {
+        "refresh": "{{refreshToken}}",
+    },
+    ("POST", "/api/v1/auth/signup/"): {
+        "username": "{{username}}",
+        "email": "{{email}}",
+        "first_name": "New",
+        "last_name": "User",
+        "role": "chw",
+        "facility": raw_variable("facilityId"),
+        "phone": "+254700000123",
+        "password": "{{password}}",
+    },
+    ("POST", "/api/v1/facilities/"): {
+        "name": "Kibera Dispensary",
+        "code": "KE-NBO-KIB-001",
+        "facility_type": "dispensary",
+        "county": "Nairobi",
+        "sub_county": "Kibra",
+        "ward": "Laini Saba",
+        "phone": "+254700000100",
+        "is_active": True,
+    },
+    ("PUT", "/api/v1/facilities/{id}/"): {
+        "name": "Kibera Dispensary",
+        "code": "KE-NBO-KIB-001",
+        "facility_type": "dispensary",
+        "county": "Nairobi",
+        "sub_county": "Kibra",
+        "ward": "Laini Saba",
+        "phone": "+254700000100",
+        "is_active": True,
+    },
+    ("PATCH", "/api/v1/facilities/{id}/"): {
+        "phone": "+254700000101",
+    },
+    ("POST", "/api/v1/users/"): {
+        "username": "clinician1",
+        "email": "clinician1@example.com",
+        "first_name": "Amina",
+        "last_name": "Otieno",
+        "role": "clinician",
+        "facility": raw_variable("facilityId"),
+        "phone": "+254700000200",
+        "is_active": True,
+        "must_reset_password": False,
+        "password": "VerySecurePassword123!",
+    },
+    ("PUT", "/api/v1/users/{id}/"): {
+        "username": "clinician1",
+        "email": "clinician1@example.com",
+        "first_name": "Amina",
+        "last_name": "Otieno",
+        "role": "clinician",
+        "facility": raw_variable("facilityId"),
+        "phone": "+254700000200",
+        "is_active": True,
+        "must_reset_password": False,
+    },
+    ("PATCH", "/api/v1/users/{id}/"): {
+        "phone": "+254700000201",
+        "must_reset_password": True,
+    },
+    ("POST", "/api/v1/users/{id}/deactivate/"): {},
+    ("POST", "/api/v1/patients/"): {
+        "external_id": "P-001",
+        "given_name": "Amina",
+        "family_name": "Otieno",
+        "date_of_birth": "1993-08-21",
+        "sex": "female",
+        "phone": "+254700000001",
+        "national_id_hash": "hashed-national-id",
+        "facility": raw_variable("facilityId"),
+        "enrollment_source": "art_clinic",
+        "consented_at": "2026-05-19T09:00:00Z",
+        "is_active": True,
+    },
+    ("PUT", "/api/v1/patients/{id}/"): {
+        "external_id": "P-001",
+        "given_name": "Amina",
+        "family_name": "Otieno",
+        "date_of_birth": "1993-08-21",
+        "sex": "female",
+        "phone": "+254700000001",
+        "national_id_hash": "hashed-national-id",
+        "facility": raw_variable("facilityId"),
+        "enrollment_source": "art_clinic",
+        "consented_at": "2026-05-19T09:00:00Z",
+        "is_active": True,
+    },
+    ("PATCH", "/api/v1/patients/{id}/"): {
+        "phone": "+254700000002",
+    },
+    ("POST", "/api/v1/clinical/intakes/"): {
+        "patient": raw_variable("patientId"),
+        "occurred_at": "2026-05-19T09:30:00Z",
+        "notes": "Initial ART clinic TB risk intake.",
+        "cough": True,
+        "fever": False,
+        "night_sweats": False,
+        "weight_loss": True,
+        "hiv_positive": True,
+        "pregnant": False,
+        "postpartum": False,
+        "diabetes": False,
+        "sle_or_autoimmune": False,
+        "ckd": False,
+        "on_immunosuppressants": False,
+        "previous_tb": False,
+        "household_tb_contact": True,
+        "crowded_housing": True,
+        "poor_ventilation": True,
+        "medication_history": {
+            "current": ["tenofovir", "lamivudine", "dolutegravir"],
+        },
+    },
+    ("POST", "/api/v1/households/"): {
+        "index_patient": raw_variable("patientId"),
+        "assigned_chw": raw_variable("userId"),
+        "county": "Nairobi",
+        "sub_county": "Kibra",
+        "ward": "Laini Saba",
+        "village": "Village A",
+        "address_description": "Near the community hall.",
+        "latitude": -1.3132,
+        "longitude": 36.7891,
+        "contact_entries": [
+            {
+                "full_name": "Mary Otieno",
+                "age_years": 34,
+                "phone": "+254700000301",
+                "relationship_to_index": "Spouse",
+                "immunocompromised": False,
+                "status": "pending",
+            },
+            {
+                "full_name": "Kevin Otieno",
+                "age_years": 6,
+                "relationship_to_index": "Child",
+                "immunocompromised": True,
+                "status": "pending",
+            },
+        ],
+    },
+    ("PUT", "/api/v1/households/{id}/"): {
+        "index_patient": raw_variable("patientId"),
+        "assigned_chw": raw_variable("userId"),
+        "county": "Nairobi",
+        "sub_county": "Kibra",
+        "ward": "Laini Saba",
+        "village": "Village A",
+        "address_description": "Near the community hall.",
+        "latitude": -1.3132,
+        "longitude": 36.7891,
+    },
+    ("PATCH", "/api/v1/households/{id}/"): {
+        "assigned_chw": raw_variable("userId"),
+        "address_description": "Updated landmark for follow-up.",
+    },
+    ("POST", "/api/v1/household-contacts/"): {
+        "household": raw_variable("householdId"),
+        "patient": raw_variable("patientId"),
+        "full_name": "Grace Achieng",
+        "age_years": 28,
+        "phone": "+254700000302",
+        "relationship_to_index": "Sibling",
+        "immunocompromised": False,
+        "status": "pending",
+    },
+    ("PUT", "/api/v1/household-contacts/{id}/"): {
+        "household": raw_variable("householdId"),
+        "patient": raw_variable("patientId"),
+        "full_name": "Grace Achieng",
+        "age_years": 28,
+        "phone": "+254700000302",
+        "relationship_to_index": "Sibling",
+        "immunocompromised": False,
+        "status": "screened",
+    },
+    ("PATCH", "/api/v1/household-contacts/{id}/"): {
+        "status": "screened",
+    },
+    ("POST", "/api/v1/workflow-tasks/{id}/assign/"): {
+        "assigned_to": raw_variable("userId"),
+    },
+    ("POST", "/api/v1/workflow-tasks/{id}/update_status/"): {
+        "status": "in_progress",
+    },
+}
+
+REQUEST_ORDER = {
+    ("GET", "/health/"): 10,
+    ("POST", "/api/v1/auth/signup/"): 20,
+    ("POST", "/api/v1/auth/login/"): 30,
+    ("GET", "/api/v1/auth/me/"): 40,
+    ("POST", "/api/v1/auth/refresh/"): 50,
+    ("POST", "/api/v1/auth/logout/"): 60,
+    ("GET", "/api/v1/facilities/"): 100,
+    ("POST", "/api/v1/facilities/"): 110,
+    ("GET", "/api/v1/users/"): 200,
+    ("POST", "/api/v1/users/"): 210,
+    ("GET", "/api/v1/patients/"): 300,
+    ("POST", "/api/v1/patients/"): 310,
+    ("GET", "/api/v1/households/"): 400,
+    ("POST", "/api/v1/households/"): 410,
+    ("GET", "/api/v1/household-contacts/"): 420,
+    ("POST", "/api/v1/household-contacts/"): 430,
+    ("GET", "/api/v1/clinical/encounters/"): 500,
+    ("POST", "/api/v1/clinical/intakes/"): 510,
+    ("GET", "/api/v1/risk-assessments/"): 600,
+    ("GET", "/api/v1/workflow-tasks/"): 700,
+    ("POST", "/api/v1/workflow-tasks/{id}/assign/"): 710,
+    ("POST", "/api/v1/workflow-tasks/{id}/update_status/"): 720,
+}
 
 
 def build_openapi_schema():
@@ -45,7 +300,10 @@ def build_postman_collection(schema: dict) -> dict:
                 continue
             tag = (operation.get("tags") or ["Misc"])[0]
             grouped_items[tag].append(
-                build_postman_request(path, method.upper(), operation, schema),
+                (
+                    sort_key_for_request(path, method.upper()),
+                    build_postman_request(path, method.upper(), operation, schema),
+                ),
             )
 
     ordered_tags = [tag for tag in TAG_ORDER if tag in grouped_items]
@@ -56,7 +314,8 @@ def build_postman_collection(schema: dict) -> dict:
             "name": "ShieldTB Backend",
             "description": (
                 "Generated from the ShieldTB OpenAPI schema. "
-                "Use the Postman Desktop Agent for localhost requests."
+                "Use the Postman Desktop Agent for localhost requests. "
+                "Run Health check first, then Sign up or Log in to populate token variables."
             ),
             "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
         },
@@ -70,16 +329,20 @@ def build_postman_collection(schema: dict) -> dict:
                 }
             ],
         },
-        "variable": [
-            {"key": "baseUrl", "value": "http://localhost:8000"},
-            {"key": "accessToken", "value": ""},
-            {"key": "refreshToken", "value": ""},
-            {"key": "facilityId", "value": ""},
-            {"key": "patientId", "value": ""},
-            {"key": "encounterId", "value": ""},
-            {"key": "userId", "value": ""},
+        "variable": [{"key": key, "value": value} for key, value, _kind in POSTMAN_VARIABLES],
+        "item": [
+            {
+                "name": tag,
+                "item": [
+                    request
+                    for _key, request in sorted(
+                        grouped_items[tag],
+                        key=lambda item: item[0],
+                    )
+                ],
+            }
+            for tag in ordered_tags
         ],
-        "item": [{"name": tag, "item": grouped_items[tag]} for tag in ordered_tags],
     }
 
 
@@ -88,20 +351,12 @@ def build_postman_environment() -> dict:
         "name": "ShieldTB Local",
         "values": [
             {
-                "key": "baseUrl",
-                "value": "http://localhost:8000",
-                "type": "default",
+                "key": key,
+                "value": value,
+                "type": kind,
                 "enabled": True,
-            },
-            {"key": "username", "value": "", "type": "default", "enabled": True},
-            {"key": "password", "value": "", "type": "secret", "enabled": True},
-            {"key": "email", "value": "", "type": "default", "enabled": True},
-            {"key": "accessToken", "value": "", "type": "secret", "enabled": True},
-            {"key": "refreshToken", "value": "", "type": "secret", "enabled": True},
-            {"key": "facilityId", "value": "", "type": "default", "enabled": True},
-            {"key": "patientId", "value": "", "type": "default", "enabled": True},
-            {"key": "encounterId", "value": "", "type": "default", "enabled": True},
-            {"key": "userId", "value": "", "type": "default", "enabled": True},
+            }
+            for key, value, kind in POSTMAN_VARIABLES
         ],
         "_postman_variable_scope": "environment",
         "_postman_exported_at": "2026-05-19T00:00:00.000Z",
@@ -126,9 +381,10 @@ def build_postman_request(path: str, method: str, operation: dict, schema: dict)
 
     if "requestBody" in operation:
         body_schema = first_json_schema(operation["requestBody"], schema)
+        body_example = request_body_example(path, method, body_schema, schema)
         request["request"]["body"] = {
             "mode": "raw",
-            "raw": json.dumps(example_from_schema(body_schema, schema), indent=2),
+            "raw": render_postman_json(body_example),
             "options": {"raw": {"language": "json"}},
         }
 
@@ -182,6 +438,12 @@ def build_events(path: str) -> list[dict]:
         return [postman_test_event(variable_capture_script("encounterId"))]
     if path == "/api/v1/users/":
         return [postman_test_event(variable_capture_script("userId"))]
+    if path == "/api/v1/households/":
+        return [postman_test_event(variable_capture_script("householdId"))]
+    if path == "/api/v1/household-contacts/":
+        return [postman_test_event(variable_capture_script("contactId"))]
+    if path == "/api/v1/auth/logout/":
+        return [postman_test_event(clear_auth_script())]
     return []
 
 
@@ -212,11 +474,33 @@ for (const cookie of setCookies) {
 }"""
 
 
+def clear_auth_script() -> str:
+    return """pm.environment.unset("accessToken");
+pm.environment.unset("refreshToken");"""
+
+
 def variable_capture_script(variable_name: str) -> str:
     return f"""const response = pm.response.json();
 if (response && response.id) {{
   pm.environment.set("{variable_name}", response.id);
 }}"""
+
+
+def request_body_example(path: str, method: str, body_schema: dict, schema: dict):
+    override = REQUEST_BODY_OVERRIDES.get((method, path))
+    if override is not None:
+        return override
+    return example_from_schema(body_schema, schema)
+
+
+def render_postman_json(payload: dict) -> str:
+    rendered = json.dumps(payload, indent=2)
+    pattern = rf'"{RAW_MARKER_PREFIX}(.*?)' + RAW_MARKER_SUFFIX + r'"'
+    return re.sub(pattern, r"\1", rendered)
+
+
+def sort_key_for_request(path: str, method: str) -> tuple[int, str, str]:
+    return (REQUEST_ORDER.get((method, path), 9999), path, method)
 
 
 def first_json_schema(request_body: dict, schema: dict) -> dict:
