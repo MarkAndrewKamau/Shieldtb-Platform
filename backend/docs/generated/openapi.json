@@ -2268,6 +2268,28 @@
           }
         }
       }
+    },
+    "/health/": {
+      "get": {
+        "operationId": "health_retrieve",
+        "description": "Simple liveness endpoint for local development and deployment probes.",
+        "summary": "Health check",
+        "tags": [
+          "Health"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCheckResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
     }
   },
   "components": {
@@ -2563,6 +2585,21 @@
         "type": "string",
         "description": "* `dispensary` - Dispensary\n* `health_centre` - Health centre\n* `hospital` - Hospital\n* `lab` - Laboratory\n* `community_unit` - Community unit"
       },
+      "HealthCheckResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "service": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "service",
+          "status"
+        ]
+      },
       "Household": {
         "type": "object",
         "properties": {
@@ -2693,7 +2730,7 @@
             "type": "boolean"
           },
           "status": {
-            "$ref": "#/components/schemas/Status9a8Enum"
+            "$ref": "#/components/schemas/HouseholdContactStatusEnum"
           },
           "created_at": {
             "type": "string",
@@ -2749,13 +2786,25 @@
             "type": "boolean"
           },
           "status": {
-            "$ref": "#/components/schemas/Status9a8Enum"
+            "$ref": "#/components/schemas/HouseholdContactStatusEnum"
           }
         },
         "required": [
           "full_name",
           "household"
         ]
+      },
+      "HouseholdContactStatusEnum": {
+        "enum": [
+          "pending",
+          "screened",
+          "referred",
+          "started_tpt",
+          "missed_follow_up",
+          "completed"
+        ],
+        "type": "string",
+        "description": "* `pending` - Pending screening\n* `screened` - Screened\n* `referred` - Referred\n* `started_tpt` - Started TPT\n* `missed_follow_up` - Missed follow-up\n* `completed` - Completed"
       },
       "HouseholdContactWrite": {
         "type": "object",
@@ -2786,7 +2835,7 @@
             "type": "boolean"
           },
           "status": {
-            "$ref": "#/components/schemas/Status9a8Enum"
+            "$ref": "#/components/schemas/HouseholdContactStatusEnum"
           }
         },
         "required": [
@@ -2823,7 +2872,7 @@
             "type": "boolean"
           },
           "status": {
-            "$ref": "#/components/schemas/Status9a8Enum"
+            "$ref": "#/components/schemas/HouseholdContactStatusEnum"
           }
         },
         "required": [
@@ -3131,7 +3180,7 @@
             "type": "boolean"
           },
           "status": {
-            "$ref": "#/components/schemas/Status9a8Enum"
+            "$ref": "#/components/schemas/HouseholdContactStatusEnum"
           }
         }
       },
@@ -3561,29 +3610,6 @@
           "username"
         ]
       },
-      "Status955Enum": {
-        "enum": [
-          "open",
-          "in_progress",
-          "blocked",
-          "completed",
-          "cancelled"
-        ],
-        "type": "string",
-        "description": "* `open` - Open\n* `in_progress` - In progress\n* `blocked` - Blocked\n* `completed` - Completed\n* `cancelled` - Cancelled"
-      },
-      "Status9a8Enum": {
-        "enum": [
-          "pending",
-          "screened",
-          "referred",
-          "started_tpt",
-          "missed_follow_up",
-          "completed"
-        ],
-        "type": "string",
-        "description": "* `pending` - Pending screening\n* `screened` - Screened\n* `referred` - Referred\n* `started_tpt` - Started TPT\n* `missed_follow_up` - Missed follow-up\n* `completed` - Completed"
-      },
       "TaskTypeEnum": {
         "enum": [
           "household_screening",
@@ -3744,7 +3770,7 @@
           "status": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/Status955Enum"
+                "$ref": "#/components/schemas/WorkflowTaskStatusEnum"
               }
             ],
             "readOnly": true
@@ -3840,11 +3866,22 @@
           "assigned_to"
         ]
       },
+      "WorkflowTaskStatusEnum": {
+        "enum": [
+          "open",
+          "in_progress",
+          "blocked",
+          "completed",
+          "cancelled"
+        ],
+        "type": "string",
+        "description": "* `open` - Open\n* `in_progress` - In progress\n* `blocked` - Blocked\n* `completed` - Completed\n* `cancelled` - Cancelled"
+      },
       "WorkflowTaskStatusRequest": {
         "type": "object",
         "properties": {
           "status": {
-            "$ref": "#/components/schemas/Status955Enum"
+            "$ref": "#/components/schemas/WorkflowTaskStatusEnum"
           }
         },
         "required": [
@@ -3871,6 +3908,10 @@
     }
   },
   "tags": [
+    {
+      "name": "Health",
+      "description": "Service liveness and readiness probes."
+    },
     {
       "name": "Auth",
       "description": "Authentication and session lifecycle."

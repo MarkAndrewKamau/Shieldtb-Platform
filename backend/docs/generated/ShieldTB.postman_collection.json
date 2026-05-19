@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "ShieldTB Backend",
-    "description": "Generated from the ShieldTB OpenAPI schema. Use the Postman Desktop Agent for localhost requests.",
+    "description": "Generated from the ShieldTB OpenAPI schema. Use the Postman Desktop Agent for localhost requests. Run Health check first, then Sign up or Log in to populate token variables.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -18,6 +18,18 @@
     {
       "key": "baseUrl",
       "value": "http://localhost:8000"
+    },
+    {
+      "key": "username",
+      "value": ""
+    },
+    {
+      "key": "password",
+      "value": ""
+    },
+    {
+      "key": "email",
+      "value": ""
     },
     {
       "key": "accessToken",
@@ -42,12 +54,117 @@
     {
       "key": "userId",
       "value": ""
+    },
+    {
+      "key": "householdId",
+      "value": ""
+    },
+    {
+      "key": "contactId",
+      "value": ""
     }
   ],
   "item": [
     {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/health/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Simple liveness endpoint for local development and deployment probes.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Auth",
       "item": [
+        {
+          "name": "Sign up",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/signup/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "signup"
+              ]
+            },
+            "description": "Creates a non-admin user account and sets HttpOnly JWT cookies.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"email\": \"{{email}}\",\n  \"first_name\": \"New\",\n  \"last_name\": \"User\",\n  \"role\": \"chw\",\n  \"facility\": {{facilityId}},\n  \"phone\": \"+254700000123\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const setCookies = pm.response.headers",
+                  "  .all()",
+                  "  .filter(h => h.key.toLowerCase() === \"set-cookie\")",
+                  "  .map(h => h.value);",
+                  "",
+                  "for (const cookie of setCookies) {",
+                  "  if (cookie.startsWith(\"shieldtb_access=\")) {",
+                  "    pm.environment.set(\"accessToken\", cookie.split(\";\")[0].split(\"=\")[1]);",
+                  "  }",
+                  "",
+                  "  if (cookie.startsWith(\"shieldtb_refresh=\")) {",
+                  "    pm.environment.set(\"refreshToken\", cookie.split(\";\")[0].split(\"=\")[1]);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
         {
           "name": "Log in",
           "request": {
@@ -80,7 +197,99 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"string\",\n  \"password\": \"string\"\n}",
+              "raw": "{\n  \"username\": \"{{username}}\",\n  \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const setCookies = pm.response.headers",
+                  "  .all()",
+                  "  .filter(h => h.key.toLowerCase() === \"set-cookie\")",
+                  "  .map(h => h.value);",
+                  "",
+                  "for (const cookie of setCookies) {",
+                  "  if (cookie.startsWith(\"shieldtb_access=\")) {",
+                  "    pm.environment.set(\"accessToken\", cookie.split(\";\")[0].split(\"=\")[1]);",
+                  "  }",
+                  "",
+                  "  if (cookie.startsWith(\"shieldtb_refresh=\")) {",
+                  "    pm.environment.set(\"refreshToken\", cookie.split(\";\")[0].split(\"=\")[1]);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Current user",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/me/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "me"
+              ]
+            },
+            "description": "Returns the authenticated user profile."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/refresh/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh"
+              ]
+            },
+            "description": "Rotates the refresh token and updates HttpOnly JWT cookies.",
+            "auth": {
+              "type": "noauth"
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh\": \"{{refreshToken}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -143,75 +352,7 @@
             "description": "Revokes the current access token and blacklists the refresh token when provided.",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"refresh\": \"string\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Current user",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/me/",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "me"
-              ]
-            },
-            "description": "Returns the authenticated user profile."
-          },
-          "response": []
-        },
-        {
-          "name": "Refresh token",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/refresh/",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "refresh"
-              ]
-            },
-            "description": "Rotates the refresh token and updates HttpOnly JWT cookies.",
-            "auth": {
-              "type": "noauth"
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"refresh\": \"string\"\n}",
+              "raw": "{\n  \"refresh\": \"{{refreshToken}}\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -226,86 +367,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "const setCookies = pm.response.headers",
-                  "  .all()",
-                  "  .filter(h => h.key.toLowerCase() === \"set-cookie\")",
-                  "  .map(h => h.value);",
-                  "",
-                  "for (const cookie of setCookies) {",
-                  "  if (cookie.startsWith(\"shieldtb_access=\")) {",
-                  "    pm.environment.set(\"accessToken\", cookie.split(\";\")[0].split(\"=\")[1]);",
-                  "  }",
-                  "",
-                  "  if (cookie.startsWith(\"shieldtb_refresh=\")) {",
-                  "    pm.environment.set(\"refreshToken\", cookie.split(\";\")[0].split(\"=\")[1]);",
-                  "  }",
-                  "}"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Sign up",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/auth/signup/",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "auth",
-                "signup"
-              ]
-            },
-            "description": "Creates a non-admin user account and sets HttpOnly JWT cookies.",
-            "auth": {
-              "type": "noauth"
-            },
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"string\",\n  \"email\": \"user@example.com\",\n  \"first_name\": \"string\",\n  \"last_name\": \"string\",\n  \"role\": \"admin\",\n  \"facility\": 1,\n  \"phone\": \"string\",\n  \"password\": \"string\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "type": "text/javascript",
-                "exec": [
-                  "const setCookies = pm.response.headers",
-                  "  .all()",
-                  "  .filter(h => h.key.toLowerCase() === \"set-cookie\")",
-                  "  .map(h => h.value);",
-                  "",
-                  "for (const cookie of setCookies) {",
-                  "  if (cookie.startsWith(\"shieldtb_access=\")) {",
-                  "    pm.environment.set(\"accessToken\", cookie.split(\";\")[0].split(\"=\")[1]);",
-                  "  }",
-                  "",
-                  "  if (cookie.startsWith(\"shieldtb_refresh=\")) {",
-                  "    pm.environment.set(\"refreshToken\", cookie.split(\";\")[0].split(\"=\")[1]);",
-                  "  }",
-                  "}"
+                  "pm.environment.unset(\"accessToken\");",
+                  "pm.environment.unset(\"refreshToken\");"
                 ]
               }
             }
@@ -383,7 +446,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"string\",\n  \"code\": \"string\",\n  \"facility_type\": \"dispensary\",\n  \"county\": \"string\",\n  \"sub_county\": \"string\",\n  \"ward\": \"string\",\n  \"phone\": \"string\",\n  \"is_active\": false\n}",
+              "raw": "{\n  \"name\": \"Kibera Dispensary\",\n  \"code\": \"KE-NBO-KIB-001\",\n  \"facility_type\": \"dispensary\",\n  \"county\": \"Nairobi\",\n  \"sub_county\": \"Kibra\",\n  \"ward\": \"Laini Saba\",\n  \"phone\": \"+254700000100\",\n  \"is_active\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -408,9 +471,9 @@
           ]
         },
         {
-          "name": "Retrieve facility",
+          "name": "Delete facility",
           "request": {
-            "method": "GET",
+            "method": "DELETE",
             "header": [
               {
                 "key": "Accept",
@@ -434,16 +497,12 @@
           "response": []
         },
         {
-          "name": "Update facility",
+          "name": "Retrieve facility",
           "request": {
-            "method": "PUT",
+            "method": "GET",
             "header": [
               {
                 "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
                 "value": "application/json"
               }
             ],
@@ -459,16 +518,7 @@
                 "{{id}}"
               ]
             },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"string\",\n  \"code\": \"string\",\n  \"facility_type\": \"dispensary\",\n  \"county\": \"string\",\n  \"sub_county\": \"string\",\n  \"ward\": \"string\",\n  \"phone\": \"string\",\n  \"is_active\": false\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
+            "description": ""
           },
           "response": []
         },
@@ -501,7 +551,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"string\",\n  \"code\": \"string\",\n  \"facility_type\": \"dispensary\",\n  \"county\": \"string\",\n  \"sub_county\": \"string\",\n  \"ward\": \"string\",\n  \"phone\": \"string\",\n  \"is_active\": false\n}",
+              "raw": "{\n  \"phone\": \"+254700000101\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -512,12 +562,16 @@
           "response": []
         },
         {
-          "name": "Delete facility",
+          "name": "Update facility",
           "request": {
-            "method": "DELETE",
+            "method": "PUT",
             "header": [
               {
                 "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
                 "value": "application/json"
               }
             ],
@@ -533,7 +587,16 @@
                 "{{id}}"
               ]
             },
-            "description": ""
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Kibera Dispensary\",\n  \"code\": \"KE-NBO-KIB-001\",\n  \"facility_type\": \"dispensary\",\n  \"county\": \"Nairobi\",\n  \"sub_county\": \"Kibra\",\n  \"ward\": \"Laini Saba\",\n  \"phone\": \"+254700000100\",\n  \"is_active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         }
@@ -609,7 +672,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"string\",\n  \"email\": \"user@example.com\",\n  \"first_name\": \"string\",\n  \"last_name\": \"string\",\n  \"role\": \"admin\",\n  \"facility\": 1,\n  \"phone\": \"string\",\n  \"is_active\": false,\n  \"must_reset_password\": false,\n  \"password\": \"string\"\n}",
+              "raw": "{\n  \"username\": \"clinician1\",\n  \"email\": \"clinician1@example.com\",\n  \"first_name\": \"Amina\",\n  \"last_name\": \"Otieno\",\n  \"role\": \"clinician\",\n  \"facility\": {{facilityId}},\n  \"phone\": \"+254700000200\",\n  \"is_active\": true,\n  \"must_reset_password\": false,\n  \"password\": \"VerySecurePassword123!\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -634,9 +697,9 @@
           ]
         },
         {
-          "name": "Retrieve user",
+          "name": "Delete user",
           "request": {
-            "method": "GET",
+            "method": "DELETE",
             "header": [
               {
                 "key": "Accept",
@@ -660,16 +723,12 @@
           "response": []
         },
         {
-          "name": "Update user",
+          "name": "Retrieve user",
           "request": {
-            "method": "PUT",
+            "method": "GET",
             "header": [
               {
                 "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
                 "value": "application/json"
               }
             ],
@@ -685,16 +744,7 @@
                 "{{id}}"
               ]
             },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"username\": \"string\",\n  \"email\": \"user@example.com\",\n  \"first_name\": \"string\",\n  \"last_name\": \"string\",\n  \"role\": \"admin\",\n  \"facility\": 1,\n  \"phone\": \"string\",\n  \"is_active\": false,\n  \"must_reset_password\": false,\n  \"password\": \"string\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
+            "description": ""
           },
           "response": []
         },
@@ -727,7 +777,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"string\",\n  \"email\": \"user@example.com\",\n  \"first_name\": \"string\",\n  \"last_name\": \"string\",\n  \"role\": \"admin\",\n  \"facility\": 1,\n  \"phone\": \"string\",\n  \"is_active\": false,\n  \"must_reset_password\": false,\n  \"password\": \"string\"\n}",
+              "raw": "{\n  \"phone\": \"+254700000201\",\n  \"must_reset_password\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -738,12 +788,16 @@
           "response": []
         },
         {
-          "name": "Delete user",
+          "name": "Update user",
           "request": {
-            "method": "DELETE",
+            "method": "PUT",
             "header": [
               {
                 "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
                 "value": "application/json"
               }
             ],
@@ -759,7 +813,16 @@
                 "{{id}}"
               ]
             },
-            "description": ""
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"clinician1\",\n  \"email\": \"clinician1@example.com\",\n  \"first_name\": \"Amina\",\n  \"last_name\": \"Otieno\",\n  \"role\": \"clinician\",\n  \"facility\": {{facilityId}},\n  \"phone\": \"+254700000200\",\n  \"is_active\": true,\n  \"must_reset_password\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         }
@@ -835,7 +898,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"external_id\": \"string\",\n  \"given_name\": \"string\",\n  \"family_name\": \"string\",\n  \"date_of_birth\": \"2026-05-19\",\n  \"sex\": \"female\",\n  \"phone\": \"string\",\n  \"national_id_hash\": \"string\",\n  \"facility\": 1,\n  \"enrollment_source\": \"art_clinic\",\n  \"consented_at\": \"2026-05-19T09:00:00Z\",\n  \"is_active\": false\n}",
+              "raw": "{\n  \"external_id\": \"P-001\",\n  \"given_name\": \"Amina\",\n  \"family_name\": \"Otieno\",\n  \"date_of_birth\": \"1993-08-21\",\n  \"sex\": \"female\",\n  \"phone\": \"+254700000001\",\n  \"national_id_hash\": \"hashed-national-id\",\n  \"facility\": {{facilityId}},\n  \"enrollment_source\": \"art_clinic\",\n  \"consented_at\": \"2026-05-19T09:00:00Z\",\n  \"is_active\": true\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -860,9 +923,9 @@
           ]
         },
         {
-          "name": "Retrieve patient",
+          "name": "Deactivate patient",
           "request": {
-            "method": "GET",
+            "method": "DELETE",
             "header": [
               {
                 "key": "Accept",
@@ -886,16 +949,12 @@
           "response": []
         },
         {
-          "name": "Update patient",
+          "name": "Retrieve patient",
           "request": {
-            "method": "PUT",
+            "method": "GET",
             "header": [
               {
                 "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
                 "value": "application/json"
               }
             ],
@@ -911,16 +970,7 @@
                 "{{id}}"
               ]
             },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"external_id\": \"string\",\n  \"given_name\": \"string\",\n  \"family_name\": \"string\",\n  \"date_of_birth\": \"2026-05-19\",\n  \"sex\": \"female\",\n  \"phone\": \"string\",\n  \"national_id_hash\": \"string\",\n  \"facility\": 1,\n  \"enrollment_source\": \"art_clinic\",\n  \"consented_at\": \"2026-05-19T09:00:00Z\",\n  \"is_active\": false\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
+            "description": ""
           },
           "response": []
         },
@@ -953,7 +1003,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"external_id\": \"string\",\n  \"given_name\": \"string\",\n  \"family_name\": \"string\",\n  \"date_of_birth\": \"2026-05-19\",\n  \"sex\": \"female\",\n  \"phone\": \"string\",\n  \"national_id_hash\": \"string\",\n  \"facility\": 1,\n  \"enrollment_source\": \"art_clinic\",\n  \"consented_at\": \"2026-05-19T09:00:00Z\",\n  \"is_active\": false\n}",
+              "raw": "{\n  \"phone\": \"+254700000002\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -964,12 +1014,16 @@
           "response": []
         },
         {
-          "name": "Deactivate patient",
+          "name": "Update patient",
           "request": {
-            "method": "DELETE",
+            "method": "PUT",
             "header": [
               {
                 "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
                 "value": "application/json"
               }
             ],
@@ -985,7 +1039,16 @@
                 "{{id}}"
               ]
             },
-            "description": ""
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"external_id\": \"P-001\",\n  \"given_name\": \"Amina\",\n  \"family_name\": \"Otieno\",\n  \"date_of_birth\": \"1993-08-21\",\n  \"sex\": \"female\",\n  \"phone\": \"+254700000001\",\n  \"national_id_hash\": \"hashed-national-id\",\n  \"facility\": {{facilityId}},\n  \"enrollment_source\": \"art_clinic\",\n  \"consented_at\": \"2026-05-19T09:00:00Z\",\n  \"is_active\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         }
@@ -994,6 +1057,97 @@
     {
       "name": "Households",
       "item": [
+        {
+          "name": "List households",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/households/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "households"
+              ]
+            },
+            "description": ""
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response && response.id) {",
+                  "  pm.environment.set(\"householdId\", response.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Create household trace",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/households/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "households"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"index_patient\": {{patientId}},\n  \"assigned_chw\": {{userId}},\n  \"county\": \"Nairobi\",\n  \"sub_county\": \"Kibra\",\n  \"ward\": \"Laini Saba\",\n  \"village\": \"Village A\",\n  \"address_description\": \"Near the community hall.\",\n  \"latitude\": -1.3132,\n  \"longitude\": 36.7891,\n  \"contact_entries\": [\n    {\n      \"full_name\": \"Mary Otieno\",\n      \"age_years\": 34,\n      \"phone\": \"+254700000301\",\n      \"relationship_to_index\": \"Spouse\",\n      \"immunocompromised\": false,\n      \"status\": \"pending\"\n    },\n    {\n      \"full_name\": \"Kevin Otieno\",\n      \"age_years\": 6,\n      \"relationship_to_index\": \"Child\",\n      \"immunocompromised\": true,\n      \"status\": \"pending\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response && response.id) {",
+                  "  pm.environment.set(\"householdId\", response.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
         {
           "name": "List household contacts",
           "request": {
@@ -1017,7 +1171,21 @@
             },
             "description": ""
           },
-          "response": []
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response && response.id) {",
+                  "  pm.environment.set(\"contactId\", response.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
         },
         {
           "name": "Create household contact",
@@ -1047,13 +1215,53 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"household\": 1,\n  \"patient\": 1,\n  \"full_name\": \"string\",\n  \"age_years\": 1,\n  \"phone\": \"string\",\n  \"relationship_to_index\": \"string\",\n  \"immunocompromised\": false,\n  \"status\": \"pending\"\n}",
+              "raw": "{\n  \"household\": {{householdId}},\n  \"patient\": {{patientId}},\n  \"full_name\": \"Grace Achieng\",\n  \"age_years\": 28,\n  \"phone\": \"+254700000302\",\n  \"relationship_to_index\": \"Sibling\",\n  \"immunocompromised\": false,\n  \"status\": \"pending\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response && response.id) {",
+                  "  pm.environment.set(\"contactId\", response.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Delete household contact",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/household-contacts/{{id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "household-contacts",
+                "{{id}}"
+              ]
+            },
+            "description": ""
           },
           "response": []
         },
@@ -1080,45 +1288,6 @@
               ]
             },
             "description": ""
-          },
-          "response": []
-        },
-        {
-          "name": "Update household contact",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/household-contacts/{{id}}/",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "household-contacts",
-                "{{id}}"
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"household\": 1,\n  \"patient\": 1,\n  \"full_name\": \"string\",\n  \"age_years\": 1,\n  \"phone\": \"string\",\n  \"relationship_to_index\": \"string\",\n  \"immunocompromised\": false,\n  \"status\": \"pending\"\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
           },
           "response": []
         },
@@ -1151,7 +1320,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"household\": 1,\n  \"patient\": 1,\n  \"full_name\": \"string\",\n  \"age_years\": 1,\n  \"phone\": \"string\",\n  \"relationship_to_index\": \"string\",\n  \"immunocompromised\": false,\n  \"status\": \"pending\"\n}",
+              "raw": "{\n  \"status\": \"screened\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1162,12 +1331,16 @@
           "response": []
         },
         {
-          "name": "Delete household contact",
+          "name": "Update household contact",
           "request": {
-            "method": "DELETE",
+            "method": "PUT",
             "header": [
               {
                 "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
                 "value": "application/json"
               }
             ],
@@ -1183,168 +1356,10 @@
                 "{{id}}"
               ]
             },
-            "description": ""
-          },
-          "response": []
-        },
-        {
-          "name": "List households",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/households/",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "households"
-              ]
-            },
-            "description": ""
-          },
-          "response": []
-        },
-        {
-          "name": "Create household trace",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/households/",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "households"
-              ]
-            },
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"index_patient\": 1,\n  \"county\": \"string\",\n  \"sub_county\": \"string\",\n  \"ward\": \"string\",\n  \"village\": \"string\",\n  \"address_description\": \"string\",\n  \"latitude\": \"string\",\n  \"longitude\": \"string\",\n  \"assigned_chw\": 1,\n  \"contact_entries\": [\n    {\n      \"patient\": 1,\n      \"full_name\": \"string\",\n      \"age_years\": 1,\n      \"phone\": \"string\",\n      \"relationship_to_index\": \"string\",\n      \"immunocompromised\": false,\n      \"status\": \"pending\"\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Retrieve household",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/households/{{id}}/",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "households",
-                "{{id}}"
-              ]
-            },
-            "description": ""
-          },
-          "response": []
-        },
-        {
-          "name": "Update household",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/households/{{id}}/",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "households",
-                "{{id}}"
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"index_patient\": 1,\n  \"county\": \"string\",\n  \"sub_county\": \"string\",\n  \"ward\": \"string\",\n  \"village\": \"string\",\n  \"address_description\": \"string\",\n  \"latitude\": \"string\",\n  \"longitude\": \"string\",\n  \"assigned_chw\": 1,\n  \"contact_entries\": [\n    {\n      \"patient\": 1,\n      \"full_name\": \"string\",\n      \"age_years\": 1,\n      \"phone\": \"string\",\n      \"relationship_to_index\": \"string\",\n      \"immunocompromised\": false,\n      \"status\": \"pending\"\n    }\n  ]\n}",
-              "options": {
-                "raw": {
-                  "language": "json"
-                }
-              }
-            }
-          },
-          "response": []
-        },
-        {
-          "name": "Partially update household",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/households/{{id}}/",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "households",
-                "{{id}}"
-              ]
-            },
-            "description": "",
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"index_patient\": 1,\n  \"county\": \"string\",\n  \"sub_county\": \"string\",\n  \"ward\": \"string\",\n  \"village\": \"string\",\n  \"address_description\": \"string\",\n  \"latitude\": \"string\",\n  \"longitude\": \"string\",\n  \"assigned_chw\": 1,\n  \"contact_entries\": [\n    {\n      \"patient\": 1,\n      \"full_name\": \"string\",\n      \"age_years\": 1,\n      \"phone\": \"string\",\n      \"relationship_to_index\": \"string\",\n      \"immunocompromised\": false,\n      \"status\": \"pending\"\n    }\n  ]\n}",
+              "raw": "{\n  \"household\": {{householdId}},\n  \"patient\": {{patientId}},\n  \"full_name\": \"Grace Achieng\",\n  \"age_years\": 28,\n  \"phone\": \"+254700000302\",\n  \"relationship_to_index\": \"Sibling\",\n  \"immunocompromised\": false,\n  \"status\": \"screened\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1377,6 +1392,110 @@
               ]
             },
             "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Retrieve household",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/households/{{id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "households",
+                "{{id}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
+        },
+        {
+          "name": "Partially update household",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/households/{{id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "households",
+                "{{id}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"assigned_chw\": {{userId}},\n  \"address_description\": \"Updated landmark for follow-up.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update household",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/households/{{id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "households",
+                "{{id}}"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"index_patient\": {{patientId}},\n  \"assigned_chw\": {{userId}},\n  \"county\": \"Nairobi\",\n  \"sub_county\": \"Kibra\",\n  \"ward\": \"Laini Saba\",\n  \"village\": \"Village A\",\n  \"address_description\": \"Near the community hall.\",\n  \"latitude\": -1.3132,\n  \"longitude\": 36.7891\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
           },
           "response": []
         }
@@ -1412,33 +1531,6 @@
           "response": []
         },
         {
-          "name": "Retrieve clinical encounter",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/clinical/encounters/{{id}}/",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "clinical",
-                "encounters",
-                "{{id}}"
-              ]
-            },
-            "description": ""
-          },
-          "response": []
-        },
-        {
           "name": "Create structured intake",
           "request": {
             "method": "POST",
@@ -1467,7 +1559,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"patient\": 1,\n  \"occurred_at\": \"2026-05-19T09:00:00Z\",\n  \"notes\": \"string\",\n  \"cough\": false,\n  \"fever\": false,\n  \"night_sweats\": false,\n  \"weight_loss\": false,\n  \"hiv_positive\": false,\n  \"pregnant\": false,\n  \"postpartum\": false,\n  \"diabetes\": false,\n  \"sle_or_autoimmune\": false,\n  \"ckd\": false,\n  \"on_immunosuppressants\": false,\n  \"previous_tb\": false,\n  \"household_tb_contact\": false,\n  \"crowded_housing\": false,\n  \"poor_ventilation\": false,\n  \"medication_history\": \"\"\n}",
+              "raw": "{\n  \"patient\": {{patientId}},\n  \"occurred_at\": \"2026-05-19T09:30:00Z\",\n  \"notes\": \"Initial ART clinic TB risk intake.\",\n  \"cough\": true,\n  \"fever\": false,\n  \"night_sweats\": false,\n  \"weight_loss\": true,\n  \"hiv_positive\": true,\n  \"pregnant\": false,\n  \"postpartum\": false,\n  \"diabetes\": false,\n  \"sle_or_autoimmune\": false,\n  \"ckd\": false,\n  \"on_immunosuppressants\": false,\n  \"previous_tb\": false,\n  \"household_tb_contact\": true,\n  \"crowded_housing\": true,\n  \"poor_ventilation\": true,\n  \"medication_history\": {\n    \"current\": [\n      \"tenofovir\",\n      \"lamivudine\",\n      \"dolutegravir\"\n    ]\n  }\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1490,6 +1582,33 @@
               }
             }
           ]
+        },
+        {
+          "name": "Retrieve clinical encounter",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/clinical/encounters/{{id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "clinical",
+                "encounters",
+                "{{id}}"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
         }
       ]
     },
@@ -1578,32 +1697,6 @@
           "response": []
         },
         {
-          "name": "Retrieve workflow task",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/api/v1/workflow-tasks/{{id}}/",
-              "host": [
-                "{{baseUrl}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "workflow-tasks",
-                "{{id}}"
-              ]
-            },
-            "description": ""
-          },
-          "response": []
-        },
-        {
           "name": "Assign workflow task",
           "request": {
             "method": "POST",
@@ -1633,7 +1726,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"assigned_to\": 1\n}",
+              "raw": "{\n  \"assigned_to\": {{userId}}\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -1673,13 +1766,39 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"open\"\n}",
+              "raw": "{\n  \"status\": \"in_progress\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
                 }
               }
             }
+          },
+          "response": []
+        },
+        {
+          "name": "Retrieve workflow task",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/workflow-tasks/{{id}}/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "workflow-tasks",
+                "{{id}}"
+              ]
+            },
+            "description": ""
           },
           "response": []
         }
@@ -1718,7 +1837,7 @@
             "description": "",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"username\": \"string\",\n  \"email\": \"user@example.com\",\n  \"first_name\": \"string\",\n  \"last_name\": \"string\",\n  \"role\": \"admin\",\n  \"facility\": 1,\n  \"phone\": \"string\",\n  \"is_active\": false,\n  \"must_reset_password\": false,\n  \"password\": \"string\"\n}",
+              "raw": "{}",
               "options": {
                 "raw": {
                   "language": "json"
