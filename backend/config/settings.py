@@ -6,6 +6,9 @@ from pathlib import Path
 import dj_database_url
 from dotenv import load_dotenv
 
+from apps.households.choices import HouseholdContactScreeningStatus
+from apps.tasks.choices import WorkflowTaskStatus
+
 from .utils import env, env_bool, env_list
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -146,6 +149,7 @@ SPECTACULAR_SETTINGS = {
     "SCHEMA_PATH_PREFIX": r"/api/v1",
     "COMPONENT_SPLIT_REQUEST": True,
     "TAGS": [
+        {"name": "Health", "description": "Service liveness and readiness probes."},
         {"name": "Auth", "description": "Authentication and session lifecycle."},
         {"name": "Facilities", "description": "Facility registry and administration."},
         {"name": "Users", "description": "User administration."},
@@ -155,6 +159,10 @@ SPECTACULAR_SETTINGS = {
         {"name": "Risk", "description": "Risk assessments derived from intake data."},
         {"name": "Tasks", "description": "Workflow tasks for CHWs and care-team staff."},
     ],
+    "ENUM_NAME_OVERRIDES": {
+        "HouseholdContactStatusEnum": HouseholdContactScreeningStatus,
+        "WorkflowTaskStatusEnum": WorkflowTaskStatus,
+    },
     "SECURITY": [{"BearerAuth": []}],
     "APPEND_COMPONENTS": {
         "securitySchemes": {
