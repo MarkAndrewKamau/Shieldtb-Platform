@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
+    "drf_spectacular",
     "apps.core",
     "apps.facilities",
     "apps.accounts",
@@ -104,6 +105,7 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
@@ -131,4 +133,36 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
     "JTI_CLAIM": "jti",
     "LEEWAY": 0,
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "ShieldTB Backend API",
+    "DESCRIPTION": (
+        "API for ShieldTB Kenya clinical workflows, patient registry, "
+        "risk scoring, and facility-scoped operations."
+    ),
+    "VERSION": "0.1.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SCHEMA_PATH_PREFIX": r"/api/v1",
+    "COMPONENT_SPLIT_REQUEST": True,
+    "TAGS": [
+        {"name": "Auth", "description": "Authentication and session lifecycle."},
+        {"name": "Facilities", "description": "Facility registry and administration."},
+        {"name": "Users", "description": "User administration."},
+        {"name": "Patients", "description": "Patient registry."},
+        {"name": "Households", "description": "Household tracing and contact management."},
+        {"name": "Clinical", "description": "Clinical encounters and structured intake."},
+        {"name": "Risk", "description": "Risk assessments derived from intake data."},
+        {"name": "Tasks", "description": "Workflow tasks for CHWs and care-team staff."},
+    ],
+    "SECURITY": [{"BearerAuth": []}],
+    "APPEND_COMPONENTS": {
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+            }
+        }
+    },
 }
