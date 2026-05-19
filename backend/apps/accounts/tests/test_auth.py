@@ -35,6 +35,58 @@ def clinician(db, facility):
 
 
 @pytest.mark.django_db
+def test_signup_creates_user_and_sets_auth_cookies(facility):
+    client = APIClient()
+
+    response = client.post(
+        reverse("token-signup"),
+        {
+            "username": "newchw",
+            "email": "newchw@example.com",
+            "first_name": "New",
+            "last_name": "User",
+            "role": User.Role.CHW,
+            "facility": facility.id,
+            "phone": "+254700000123",
+            "password": "a-very-secure-test-password",
+        },
+        format="json",
+    )
+
+    assert response.status_code == 201
+    assert response.data["user"]["username"] == "newchw"
+    assert response.data["user"]["role"] == User.Role.CHW
+    assert response.cookies[settings.JWT_AUTH_COOKIE]["httponly"]
+    assert response.cookies[settings.JWT_REFRESH_COOKIE]["httponly"]
+    assert User.objects.filter(username="newchw", facility=facility).exists()
+    assert AuditEvent.objects.filter(action="auth.signup").exists()
+
+
+@pytest.mark.django_db
+def test_signup_rejects_admin_role(facility):
+    client = APIClient()
+
+    response = client.post(
+        reverse("token-signup"),
+        {
+            "username": "badadmin",
+            "email": "badadmin@example.com",
+            "first_name": "Bad",
+            "last_name": "Admin",
+            "role": User.Role.ADMIN,
+            "facility": facility.id,
+            "phone": "+254700000124",
+            "password": "a-very-secure-test-password",
+        },
+        format="json",
+    )
+
+    assert response.status_code == 400
+    assert "role" in response.data
+    assert not User.objects.filter(username="badadmin").exists()
+
+
+@pytest.mark.django_db
 def test_login_sets_httponly_cookies_without_returning_raw_tokens(clinician):
     client = APIClient()
 
