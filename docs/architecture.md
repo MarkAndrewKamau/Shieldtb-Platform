@@ -60,3 +60,15 @@ or operationally credible.
 6. CHW task assignment
 7. Notification provider abstraction
 8. Dashboards and analytics endpoints
+
+## API Artifacts
+
+OpenAPI is the source of truth for API-sharing artifacts. Generate it with:
+
+```bash
+cd backend
+python manage.py export_api_artifacts
+```
+
+This produces a schema plus ready-to-share Postman files in
+`backend/docs/generated/`.
