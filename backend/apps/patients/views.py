@@ -1,4 +1,5 @@
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import viewsets
 from rest_framework.exceptions import PermissionDenied, ValidationError
 
@@ -8,12 +9,20 @@ from apps.patients.models import Patient
 from apps.patients.serializers import PatientSerializer
 
 
+@extend_schema_view(
+    list=extend_schema(tags=["Patients"], summary="List patients"),
+    retrieve=extend_schema(tags=["Patients"], summary="Retrieve patient"),
+    create=extend_schema(tags=["Patients"], summary="Create patient"),
+    update=extend_schema(tags=["Patients"], summary="Update patient"),
+    partial_update=extend_schema(tags=["Patients"], summary="Partially update patient"),
+    destroy=extend_schema(tags=["Patients"], summary="Deactivate patient"),
+)
 class PatientViewSet(viewsets.ModelViewSet):
+    queryset = Patient.objects.select_related("facility", "consent_recorded_by")
     serializer_class = PatientSerializer
 
     def get_queryset(self):
-        queryset = Patient.objects.select_related("facility", "consent_recorded_by")
-        return scoped_facility_queryset(self.request.user, queryset)
+        return scoped_facility_queryset(self.request.user, self.queryset)
 
     def perform_create(self, serializer):
         facility = serializer.validated_data.get("facility")

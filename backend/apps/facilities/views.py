@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import viewsets
 
 from apps.accounts.permissions import IsAdminOrReadOnly
@@ -6,7 +7,16 @@ from apps.facilities.models import Facility
 from apps.facilities.serializers import FacilitySerializer
 
 
+@extend_schema_view(
+    list=extend_schema(tags=["Facilities"], summary="List facilities"),
+    retrieve=extend_schema(tags=["Facilities"], summary="Retrieve facility"),
+    create=extend_schema(tags=["Facilities"], summary="Create facility"),
+    update=extend_schema(tags=["Facilities"], summary="Update facility"),
+    partial_update=extend_schema(tags=["Facilities"], summary="Partially update facility"),
+    destroy=extend_schema(tags=["Facilities"], summary="Delete facility"),
+)
 class FacilityViewSet(viewsets.ModelViewSet):
+    queryset = Facility.objects.all()
     serializer_class = FacilitySerializer
     permission_classes = [IsAdminOrReadOnly]
 

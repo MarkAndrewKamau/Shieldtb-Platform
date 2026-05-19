@@ -2,25 +2,19 @@ from django.conf import settings
 from django.db import models
 
 from apps.core.models import TimeStampedModel
+from apps.tasks.choices import WorkflowTaskStatus, WorkflowTaskType
 
 
 class WorkflowTask(TimeStampedModel):
-    class TaskType(models.TextChoices):
-        HOUSEHOLD_SCREENING = "household_screening", "Household screening"
-        PATIENT_FOLLOW_UP = "patient_follow_up", "Patient follow-up"
-        POSTPARTUM_CHECK_IN = "postpartum_check_in", "Postpartum check-in"
-        ADR_TRIAGE = "adr_triage", "ADR triage"
-        TPT_ELIGIBILITY_REVIEW = "tpt_eligibility_review", "TPT eligibility review"
+    TaskType = WorkflowTaskType
+    Status = WorkflowTaskStatus
 
-    class Status(models.TextChoices):
-        OPEN = "open", "Open"
-        IN_PROGRESS = "in_progress", "In progress"
-        BLOCKED = "blocked", "Blocked"
-        COMPLETED = "completed", "Completed"
-        CANCELLED = "cancelled", "Cancelled"
-
-    task_type = models.CharField(max_length=40, choices=TaskType.choices)
-    status = models.CharField(max_length=32, choices=Status.choices, default=Status.OPEN)
+    task_type = models.CharField(max_length=40, choices=WorkflowTaskType.choices)
+    status = models.CharField(
+        max_length=32,
+        choices=WorkflowTaskStatus.choices,
+        default=WorkflowTaskStatus.OPEN,
+    )
     patient = models.ForeignKey(
         "patients.Patient",
         on_delete=models.CASCADE,
@@ -53,4 +47,3 @@ class WorkflowTask(TimeStampedModel):
 
     def __str__(self) -> str:
         return self.title
-

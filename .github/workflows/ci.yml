@@ -73,5 +73,11 @@ jobs:
       - name: Apply migrations
         run: python manage.py migrate --noinput
 
+      - name: Export API artifacts
+        run: python manage.py export_api_artifacts
+
+      - name: Check generated API artifacts are up to date
+        run: git diff --exit-code docs/generated
+
       - name: Test
         run: pytest

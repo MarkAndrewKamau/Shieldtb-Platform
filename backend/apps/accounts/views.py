@@ -1,6 +1,7 @@
 from datetime import UTC, datetime
 
 from django.conf import settings
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -13,10 +14,25 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from apps.accounts.models import AccessTokenBlocklist, User
 from apps.accounts.permissions import CanManageUsers
-from apps.accounts.serializers import ShieldTBTokenObtainPairSerializer, UserSerializer
+from apps.accounts.serializers import (
+    DetailSerializer,
+    LoginRequestSerializer,
+    RefreshRequestSerializer,
+    ShieldTBTokenObtainPairSerializer,
+    SignupSerializer,
+    UserEnvelopeSerializer,
+    UserSerializer,
+)
 from apps.audit.services import record_audit_event
 
 
+@extend_schema(
+    tags=["Auth"],
+    request=LoginRequestSerializer,
+    responses={200: UserEnvelopeSerializer},
+    summary="Log in",
+    description="Authenticates a user and sets HttpOnly JWT cookies.",
+)
 class SecureTokenObtainPairView(TokenObtainPairView):
     permission_classes = [AllowAny]
     serializer_class = ShieldTBTokenObtainPairSerializer
@@ -40,6 +56,13 @@ class SecureTokenObtainPairView(TokenObtainPairView):
         return response
 
 
+@extend_schema(
+    tags=["Auth"],
+    request=RefreshRequestSerializer,
+    responses={200: DetailSerializer},
+    summary="Refresh token",
+    description="Rotates the refresh token and updates HttpOnly JWT cookies.",
+)
 class SecureTokenRefreshView(APIView):
     permission_classes = [AllowAny]
 
@@ -59,6 +82,46 @@ class SecureTokenRefreshView(APIView):
         return response
 
 
+@extend_schema(
+    tags=["Auth"],
+    request=SignupSerializer,
+    responses={201: UserEnvelopeSerializer},
+    summary="Sign up",
+    description="Creates a non-admin user account and sets HttpOnly JWT cookies.",
+)
+class SignupView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = SignupSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        refresh = ShieldTBTokenObtainPairSerializer.get_token(user)
+        access = refresh.access_token
+
+        response = Response(
+            {"user": UserSerializer(user).data},
+            status=status.HTTP_201_CREATED,
+        )
+        set_auth_cookies(response, access=str(access), refresh=str(refresh))
+        record_audit_event(
+            request,
+            action="auth.signup",
+            resource_type="User",
+            resource_id=user.id,
+            actor=user,
+        )
+        return response
+
+
+@extend_schema(
+    tags=["Auth"],
+    request=RefreshRequestSerializer,
+    responses={200: DetailSerializer},
+    summary="Log out",
+    description="Revokes the current access token and blacklists the refresh token when provided.",
+)
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -83,6 +146,12 @@ class LogoutView(APIView):
         return response
 
 
+@extend_schema(
+    tags=["Auth"],
+    responses={200: UserSerializer},
+    summary="Current user",
+    description="Returns the authenticated user profile.",
+)
 class MeView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -90,6 +159,14 @@ class MeView(APIView):
         return Response(UserSerializer(request.user).data)
 
 
+@extend_schema_view(
+    list=extend_schema(tags=["Users"], summary="List users"),
+    retrieve=extend_schema(tags=["Users"], summary="Retrieve user"),
+    create=extend_schema(tags=["Users"], summary="Create user"),
+    update=extend_schema(tags=["Users"], summary="Update user"),
+    partial_update=extend_schema(tags=["Users"], summary="Partially update user"),
+    destroy=extend_schema(tags=["Users"], summary="Delete user"),
+)
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.select_related("facility").all()
     serializer_class = UserSerializer

@@ -6,6 +6,9 @@ from pathlib import Path
 import dj_database_url
 from dotenv import load_dotenv
 
+from apps.households.choices import HouseholdContactScreeningStatus
+from apps.tasks.choices import WorkflowTaskStatus
+
 from .utils import env, env_bool, env_list
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -26,6 +29,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt.token_blacklist",
+    "drf_spectacular",
     "apps.core",
     "apps.facilities",
     "apps.accounts",
@@ -104,6 +108,7 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
@@ -131,4 +136,41 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
     "JTI_CLAIM": "jti",
     "LEEWAY": 0,
+}
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "ShieldTB Backend API",
+    "DESCRIPTION": (
+        "API for ShieldTB Kenya clinical workflows, patient registry, "
+        "risk scoring, and facility-scoped operations."
+    ),
+    "VERSION": "0.1.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "SCHEMA_PATH_PREFIX": r"/api/v1",
+    "COMPONENT_SPLIT_REQUEST": True,
+    "TAGS": [
+        {"name": "Health", "description": "Service liveness and readiness probes."},
+        {"name": "Auth", "description": "Authentication and session lifecycle."},
+        {"name": "Facilities", "description": "Facility registry and administration."},
+        {"name": "Users", "description": "User administration."},
+        {"name": "Patients", "description": "Patient registry."},
+        {"name": "Households", "description": "Household tracing and contact management."},
+        {"name": "Clinical", "description": "Clinical encounters and structured intake."},
+        {"name": "Risk", "description": "Risk assessments derived from intake data."},
+        {"name": "Tasks", "description": "Workflow tasks for CHWs and care-team staff."},
+    ],
+    "ENUM_NAME_OVERRIDES": {
+        "HouseholdContactStatusEnum": HouseholdContactScreeningStatus,
+        "WorkflowTaskStatusEnum": WorkflowTaskStatus,
+    },
+    "SECURITY": [{"BearerAuth": []}],
+    "APPEND_COMPONENTS": {
+        "securitySchemes": {
+            "BearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+            }
+        }
+    },
 }
