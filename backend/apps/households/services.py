@@ -1,3 +1,4 @@
+from apps.notifications.services import notify_workflow_task_assignment
 from apps.tasks.models import WorkflowTask
 
 
@@ -12,6 +13,7 @@ def ensure_household_screening_task(household):
     )
 
     if task:
+        previous_assignee_id = task.assigned_to_id
         contact_count = household.contacts.count()
         task.assigned_to = household.assigned_chw
         task.patient = household.index_patient
@@ -30,9 +32,11 @@ def ensure_household_screening_task(household):
                 "updated_at",
             ],
         )
+        if task.assigned_to_id and task.assigned_to_id != previous_assignee_id:
+            notify_workflow_task_assignment(task)
         return task
 
-    return WorkflowTask.objects.create(
+    task = WorkflowTask.objects.create(
         task_type=WorkflowTask.TaskType.HOUSEHOLD_SCREENING,
         status=WorkflowTask.Status.OPEN,
         patient=household.index_patient,
@@ -45,3 +49,6 @@ def ensure_household_screening_task(household):
             "household_id": household.id,
         },
     )
+    if task.assigned_to_id:
+        notify_workflow_task_assignment(task)
+    return task
