@@ -1302,6 +1302,90 @@
         }
       }
     },
+    "/api/v1/notifications/": {
+      "get": {
+        "operationId": "notifications_list",
+        "summary": "List notifications",
+        "tags": [
+          "Notifications"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Notification"
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/notifications/{id}/": {
+      "get": {
+        "operationId": "notifications_retrieve",
+        "summary": "Retrieve notification",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this notification.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Notifications"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Notification"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/v1/patients/": {
       "get": {
         "operationId": "patients_list",
@@ -3110,6 +3194,140 @@
           "username"
         ]
       },
+      "Notification": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "patient": {
+            "type": "integer",
+            "readOnly": true,
+            "nullable": true
+          },
+          "patient_name": {
+            "type": "string",
+            "readOnly": true
+          },
+          "recipient_user": {
+            "type": "integer",
+            "readOnly": true,
+            "nullable": true
+          },
+          "recipient_user_name": {
+            "type": "string",
+            "readOnly": true
+          },
+          "workflow_task": {
+            "type": "integer",
+            "readOnly": true,
+            "nullable": true
+          },
+          "workflow_task_title": {
+            "type": "string",
+            "readOnly": true
+          },
+          "channel": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotificationChannelEnum"
+              }
+            ],
+            "readOnly": true
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotificationStatusEnum"
+              }
+            ],
+            "readOnly": true
+          },
+          "recipient": {
+            "type": "string",
+            "readOnly": true
+          },
+          "template_key": {
+            "type": "string",
+            "readOnly": true
+          },
+          "payload": {
+            "readOnly": true
+          },
+          "provider_message_id": {
+            "type": "string",
+            "readOnly": true
+          },
+          "failure_reason": {
+            "type": "string",
+            "readOnly": true
+          },
+          "scheduled_for": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "nullable": true
+          },
+          "sent_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "nullable": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "channel",
+          "created_at",
+          "failure_reason",
+          "id",
+          "patient",
+          "patient_name",
+          "payload",
+          "provider_message_id",
+          "recipient",
+          "recipient_user",
+          "recipient_user_name",
+          "scheduled_for",
+          "sent_at",
+          "status",
+          "template_key",
+          "updated_at",
+          "workflow_task",
+          "workflow_task_title"
+        ]
+      },
+      "NotificationChannelEnum": {
+        "enum": [
+          "sms",
+          "whatsapp",
+          "ussd",
+          "in_app"
+        ],
+        "type": "string",
+        "description": "* `sms` - SMS\n* `whatsapp` - WhatsApp\n* `ussd` - USSD\n* `in_app` - In-app"
+      },
+      "NotificationStatusEnum": {
+        "enum": [
+          "pending",
+          "sent",
+          "delivered",
+          "failed",
+          "cancelled"
+        ],
+        "type": "string",
+        "description": "* `pending` - Pending\n* `sent` - Sent\n* `delivered` - Delivered\n* `failed` - Failed\n* `cancelled` - Cancelled"
+      },
       "PatchedFacilityRequest": {
         "type": "object",
         "properties": {
@@ -3943,6 +4161,10 @@
     {
       "name": "Tasks",
       "description": "Workflow tasks for CHWs and care-team staff."
+    },
+    {
+      "name": "Notifications",
+      "description": "Notification records and delivery state."
     }
   ]
 }
