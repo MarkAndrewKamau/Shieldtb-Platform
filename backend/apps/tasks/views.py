@@ -8,7 +8,6 @@ from rest_framework.response import Response
 from apps.accounts.models import User
 from apps.accounts.permissions import is_care_team_member
 from apps.audit.services import record_audit_event
-from apps.notifications.services import notify_workflow_task_assignment
 from apps.tasks.models import WorkflowTask
 from apps.tasks.serializers import (
     WorkflowTaskAssignmentSerializer,
@@ -83,11 +82,8 @@ class WorkflowTaskViewSet(viewsets.ReadOnlyModelViewSet):
         if assigned_to.facility_id != facility_id:
             raise ValidationError({"assigned_to": "Assigned CHW must belong to the same facility."})
 
-        previous_assigned_to_id = task.assigned_to_id
         task.assigned_to = assigned_to
         task.save(update_fields=["assigned_to", "updated_at"])
-        if task.assigned_to_id and task.assigned_to_id != previous_assigned_to_id:
-            notify_workflow_task_assignment(task)
         record_audit_event(request, "tasks.assign", "WorkflowTask", task.id)
         return Response(WorkflowTaskSerializer(task).data)
 
