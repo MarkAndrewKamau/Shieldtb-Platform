@@ -15,6 +15,7 @@ TAG_ORDER = [
     "Clinical",
     "Risk",
     "Tasks",
+    "Notifications",
 ]
 
 RAW_MARKER_PREFIX = "__POSTMAN_RAW__"
