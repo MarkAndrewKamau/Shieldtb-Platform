@@ -6,6 +6,7 @@ from apps.accounts.models import User
 from apps.audit.models import AuditEvent
 from apps.facilities.models import Facility
 from apps.households.models import Household
+from apps.notifications.models import Notification
 from apps.patients.models import Patient
 from apps.tasks.models import WorkflowTask
 
@@ -64,6 +65,8 @@ def test_chw_only_lists_assigned_workflow_tasks(setup_entities):
 @pytest.mark.django_db
 def test_clinician_can_assign_household_screening_task_to_chw(setup_entities):
     clinician, chw, _household, task = setup_entities
+    task.assigned_to = None
+    task.save(update_fields=["assigned_to", "updated_at"])
     client = APIClient()
     client.force_authenticate(clinician)
 
@@ -76,6 +79,9 @@ def test_clinician_can_assign_household_screening_task_to_chw(setup_entities):
     assert response.status_code == 200
     task.refresh_from_db()
     assert task.assigned_to == chw
+    notification = Notification.objects.get(template_key="workflow_task.assignment")
+    assert notification.recipient_user == chw
+    assert notification.workflow_task == task
     assert AuditEvent.objects.filter(action="tasks.assign").exists()
 
 
