@@ -31,6 +31,7 @@ Current ADRs:
 - `0001-database-backed-access-token-blocklist.md`
 - `0002-postgresql-as-primary-database.md`
 - `0003-synchronous-in-app-notifications-first.md`
+- `0004-live-facility-analytics-and-daily-snapshots-first.md`
 
 ## Initial Domains
 
