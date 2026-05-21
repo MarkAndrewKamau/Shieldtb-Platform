@@ -7,6 +7,7 @@ import dj_database_url
 from dotenv import load_dotenv
 
 from apps.households.choices import HouseholdContactScreeningStatus
+from apps.notifications.choices import NotificationChannel, NotificationStatus
 from apps.tasks.choices import WorkflowTaskStatus
 
 from .utils import env, env_bool, env_list
@@ -158,10 +159,14 @@ SPECTACULAR_SETTINGS = {
         {"name": "Clinical", "description": "Clinical encounters and structured intake."},
         {"name": "Risk", "description": "Risk assessments derived from intake data."},
         {"name": "Tasks", "description": "Workflow tasks for CHWs and care-team staff."},
+        {"name": "Analytics", "description": "Facility-level dashboard and metric endpoints."},
+        {"name": "Notifications", "description": "Notification records and delivery state."},
     ],
     "ENUM_NAME_OVERRIDES": {
         "HouseholdContactStatusEnum": HouseholdContactScreeningStatus,
         "WorkflowTaskStatusEnum": WorkflowTaskStatus,
+        "NotificationChannelEnum": NotificationChannel,
+        "NotificationStatusEnum": NotificationStatus,
     },
     "SECURITY": [{"BearerAuth": []}],
     "APPEND_COMPONENTS": {

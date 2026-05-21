@@ -1,6 +1,7 @@
 from rest_framework.routers import DefaultRouter
 
 from apps.accounts.views import UserViewSet
+from apps.analytics.views import FacilityDailyMetricViewSet, FacilitySummaryViewSet
 from apps.clinical.views import ClinicalEncounterViewSet, IntakeViewSet
 from apps.facilities.views import FacilityViewSet
 from apps.households.views import HouseholdContactViewSet, HouseholdViewSet
@@ -13,6 +14,16 @@ router = DefaultRouter()
 router.register("facilities", FacilityViewSet, basename="facility")
 router.register("users", UserViewSet, basename="user")
 router.register("patients", PatientViewSet, basename="patient")
+router.register(
+    "analytics/facility-summaries",
+    FacilitySummaryViewSet,
+    basename="facility-summary",
+)
+router.register(
+    "analytics/daily-metrics",
+    FacilityDailyMetricViewSet,
+    basename="facility-daily-metric",
+)
 router.register("households", HouseholdViewSet, basename="household")
 router.register("household-contacts", HouseholdContactViewSet, basename="household-contact")
 router.register("notifications", NotificationViewSet, basename="notification")
