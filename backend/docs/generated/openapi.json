@@ -6,6 +6,231 @@
     "description": "API for ShieldTB Kenya clinical workflows, patient registry, risk scoring, and facility-scoped operations."
   },
   "paths": {
+    "/api/v1/analytics/daily-metrics/": {
+      "get": {
+        "operationId": "analytics_daily_metrics_list",
+        "summary": "List daily facility metrics",
+        "tags": [
+          "Analytics"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FacilityDailyMetric"
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/daily-metrics/{id}/": {
+      "get": {
+        "operationId": "analytics_daily_metrics_retrieve",
+        "summary": "Retrieve daily facility metric",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this facility daily metric.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Analytics"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacilityDailyMetric"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/daily-metrics/refresh/": {
+      "post": {
+        "operationId": "analytics_daily_metrics_refresh_create",
+        "summary": "Refresh today's daily facility metrics",
+        "tags": [
+          "Analytics"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshFacilityMetricsRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshFacilityMetricsRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshFacilityMetricsRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FacilityDailyMetric"
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/facility-summaries/": {
+      "get": {
+        "operationId": "analytics_facility_summaries_list",
+        "summary": "List facility summaries",
+        "tags": [
+          "Analytics"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FacilitySummary"
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/facility-summaries/{id}/": {
+      "get": {
+        "operationId": "analytics_facility_summaries_retrieve",
+        "summary": "Retrieve facility summary",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this facility.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Analytics"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FacilitySummary"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/v1/auth/login/": {
       "post": {
         "operationId": "auth_login_create",
@@ -2378,16 +2603,6 @@
   },
   "components": {
     "schemas": {
-      "ChannelEnum": {
-        "enum": [
-          "sms",
-          "whatsapp",
-          "ussd",
-          "in_app"
-        ],
-        "type": "string",
-        "description": "* `sms` - SMS\n* `whatsapp` - WhatsApp\n* `ussd` - USSD\n* `in_app` - In-app"
-      },
       "ClinicalEncounter": {
         "type": "object",
         "properties": {
@@ -2626,6 +2841,81 @@
           "updated_at"
         ]
       },
+      "FacilityDailyMetric": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "facility": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "facility_name": {
+            "type": "string",
+            "readOnly": true
+          },
+          "facility_code": {
+            "type": "string",
+            "readOnly": true
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "readOnly": true
+          },
+          "patients_enrolled": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "high_risk_patients": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "contacts_pending_screening": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "contacts_screened": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "tpt_started": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "missed_follow_ups": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "contacts_pending_screening",
+          "contacts_screened",
+          "created_at",
+          "date",
+          "facility",
+          "facility_code",
+          "facility_name",
+          "high_risk_patients",
+          "id",
+          "missed_follow_ups",
+          "patients_enrolled",
+          "tpt_started",
+          "updated_at"
+        ]
+      },
       "FacilityRequest": {
         "type": "object",
         "properties": {
@@ -2666,6 +2956,82 @@
           "code",
           "facility_type",
           "name"
+        ]
+      },
+      "FacilitySummary": {
+        "type": "object",
+        "properties": {
+          "facility_id": {
+            "type": "integer"
+          },
+          "facility_name": {
+            "type": "string"
+          },
+          "facility_code": {
+            "type": "string"
+          },
+          "facility_type": {
+            "type": "string"
+          },
+          "summary_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "active_patients": {
+            "type": "integer"
+          },
+          "patients_enrolled_today": {
+            "type": "integer"
+          },
+          "high_risk_patients": {
+            "type": "integer"
+          },
+          "moderate_or_higher_risk_patients": {
+            "type": "integer"
+          },
+          "households_tracked": {
+            "type": "integer"
+          },
+          "contacts_pending_screening": {
+            "type": "integer"
+          },
+          "contacts_screened": {
+            "type": "integer"
+          },
+          "tpt_started": {
+            "type": "integer"
+          },
+          "missed_follow_ups": {
+            "type": "integer"
+          },
+          "open_workflow_tasks": {
+            "type": "integer"
+          },
+          "completed_tasks_today": {
+            "type": "integer"
+          },
+          "notifications_sent_today": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "active_patients",
+          "completed_tasks_today",
+          "contacts_pending_screening",
+          "contacts_screened",
+          "facility_code",
+          "facility_id",
+          "facility_name",
+          "facility_type",
+          "high_risk_patients",
+          "households_tracked",
+          "missed_follow_ups",
+          "moderate_or_higher_risk_patients",
+          "notifications_sent_today",
+          "open_workflow_tasks",
+          "patients_enrolled_today",
+          "summary_date",
+          "tpt_started"
         ]
       },
       "FacilityTypeEnum": {
@@ -3241,7 +3607,7 @@
           "channel": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/ChannelEnum"
+                "$ref": "#/components/schemas/NotificationChannelEnum"
               }
             ],
             "readOnly": true
@@ -3316,6 +3682,16 @@
           "workflow_task",
           "workflow_task_title"
         ]
+      },
+      "NotificationChannelEnum": {
+        "enum": [
+          "sms",
+          "whatsapp",
+          "ussd",
+          "in_app"
+        ],
+        "type": "string",
+        "description": "* `sms` - SMS\n* `whatsapp` - WhatsApp\n* `ussd` - USSD\n* `in_app` - In-app"
       },
       "NotificationStatusEnum": {
         "enum": [
@@ -3685,6 +4061,15 @@
           "family_name",
           "given_name"
         ]
+      },
+      "RefreshFacilityMetricsRequest": {
+        "type": "object",
+        "properties": {
+          "facility": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
       },
       "RefreshRequestRequest": {
         "type": "object",
@@ -4161,6 +4546,14 @@
     {
       "name": "Tasks",
       "description": "Workflow tasks for CHWs and care-team staff."
+    },
+    {
+      "name": "Analytics",
+      "description": "Facility-level dashboard and metric endpoints."
+    },
+    {
+      "name": "Notifications",
+      "description": "Notification records and delivery state."
     }
   ]
 }
