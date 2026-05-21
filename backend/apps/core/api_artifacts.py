@@ -15,6 +15,8 @@ TAG_ORDER = [
     "Clinical",
     "Risk",
     "Tasks",
+    "Analytics",
+    "Notifications",
 ]
 
 RAW_MARKER_PREFIX = "__POSTMAN_RAW__"
@@ -235,6 +237,9 @@ REQUEST_BODY_OVERRIDES = {
     ("POST", "/api/v1/workflow-tasks/{id}/update_status/"): {
         "status": "in_progress",
     },
+    ("POST", "/api/v1/analytics/daily-metrics/refresh/"): {
+        "facility": raw_variable("facilityId"),
+    },
 }
 
 REQUEST_ORDER = {
@@ -260,6 +265,9 @@ REQUEST_ORDER = {
     ("GET", "/api/v1/workflow-tasks/"): 700,
     ("POST", "/api/v1/workflow-tasks/{id}/assign/"): 710,
     ("POST", "/api/v1/workflow-tasks/{id}/update_status/"): 720,
+    ("GET", "/api/v1/analytics/facility-summaries/"): 800,
+    ("GET", "/api/v1/analytics/daily-metrics/"): 810,
+    ("POST", "/api/v1/analytics/daily-metrics/refresh/"): 820,
 }
 
 
