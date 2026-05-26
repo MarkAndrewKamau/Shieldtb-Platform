@@ -9,4 +9,7 @@ __pycache__/
 htmlcov/
 staticfiles/
 media/
-
+node_modules/
+.expo/
+dist/
+*.tsbuildinfo

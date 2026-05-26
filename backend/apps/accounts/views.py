@@ -17,6 +17,7 @@ from apps.accounts.permissions import CanManageUsers
 from apps.accounts.serializers import (
     DetailSerializer,
     LoginRequestSerializer,
+    RefreshResponseSerializer,
     RefreshRequestSerializer,
     ShieldTBTokenObtainPairSerializer,
     SignupSerializer,
@@ -31,7 +32,10 @@ from apps.audit.services import record_audit_event
     request=LoginRequestSerializer,
     responses={200: UserEnvelopeSerializer},
     summary="Log in",
-    description="Authenticates a user and sets HttpOnly JWT cookies.",
+    description=(
+        "Authenticates a user. Browser clients default to HttpOnly JWT cookies; "
+        'native clients may request `auth_mode: "token"` to receive tokens in the body.'
+    ),
 )
 class SecureTokenObtainPairView(TokenObtainPairView):
     permission_classes = [AllowAny]
@@ -43,9 +47,15 @@ class SecureTokenObtainPairView(TokenObtainPairView):
         token_data = serializer.validated_data
         refresh = token_data.pop("refresh")
         access = token_data.pop("access")
+        auth_mode = request.data.get("auth_mode", "cookie")
 
-        response = Response(token_data, status=status.HTTP_200_OK)
-        set_auth_cookies(response, access=access, refresh=refresh)
+        response_payload = dict(token_data)
+        if auth_mode == "token":
+            response_payload["access"] = access
+            response_payload["refresh"] = refresh
+        response = Response(response_payload, status=status.HTTP_200_OK)
+        if auth_mode != "token":
+            set_auth_cookies(response, access=access, refresh=refresh)
         record_audit_event(
             request,
             action="auth.login",
@@ -59,26 +69,36 @@ class SecureTokenObtainPairView(TokenObtainPairView):
 @extend_schema(
     tags=["Auth"],
     request=RefreshRequestSerializer,
-    responses={200: DetailSerializer},
+    responses={200: RefreshResponseSerializer},
     summary="Refresh token",
-    description="Rotates the refresh token and updates HttpOnly JWT cookies.",
+    description=(
+        "Rotates the refresh token. Browser clients default to updated HttpOnly cookies; "
+        'native clients may request `auth_mode: "token"` to receive fresh tokens in the body.'
+    ),
 )
 class SecureTokenRefreshView(APIView):
     permission_classes = [AllowAny]
 
     def post(self, request):
         data = request.data.copy()
+        auth_mode = data.get("auth_mode", "cookie")
         data["refresh"] = data.get("refresh") or request.COOKIES.get(settings.JWT_REFRESH_COOKIE)
         serializer = TokenRefreshSerializer(data=data)
         serializer.is_valid(raise_exception=True)
 
         token_data = serializer.validated_data
-        response = Response({"detail": "Token refreshed."}, status=status.HTTP_200_OK)
-        set_auth_cookies(
-            response,
-            access=token_data["access"],
-            refresh=token_data.get("refresh"),
-        )
+        response_payload = {"detail": "Token refreshed."}
+        if auth_mode == "token":
+            response_payload["access"] = token_data["access"]
+            if token_data.get("refresh"):
+                response_payload["refresh"] = token_data["refresh"]
+        response = Response(response_payload, status=status.HTTP_200_OK)
+        if auth_mode != "token":
+            set_auth_cookies(
+                response,
+                access=token_data["access"],
+                refresh=token_data.get("refresh"),
+            )
         return response
 
 
@@ -87,7 +107,10 @@ class SecureTokenRefreshView(APIView):
     request=SignupSerializer,
     responses={201: UserEnvelopeSerializer},
     summary="Sign up",
-    description="Creates a non-admin user account and sets HttpOnly JWT cookies.",
+    description=(
+        "Creates a non-admin user account. Browser clients default to HttpOnly JWT cookies; "
+        'native clients may request `auth_mode: "token"` to receive tokens in the body.'
+    ),
 )
 class SignupView(APIView):
     permission_classes = [AllowAny]
@@ -96,15 +119,18 @@ class SignupView(APIView):
         serializer = SignupSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+        auth_mode = request.data.get("auth_mode", "cookie")
 
         refresh = ShieldTBTokenObtainPairSerializer.get_token(user)
         access = refresh.access_token
 
-        response = Response(
-            {"user": UserSerializer(user).data},
-            status=status.HTTP_201_CREATED,
-        )
-        set_auth_cookies(response, access=str(access), refresh=str(refresh))
+        response_payload = {"user": UserSerializer(user).data}
+        if auth_mode == "token":
+            response_payload["access"] = str(access)
+            response_payload["refresh"] = str(refresh)
+        response = Response(response_payload, status=status.HTTP_201_CREATED)
+        if auth_mode != "token":
+            set_auth_cookies(response, access=str(access), refresh=str(refresh))
         record_audit_event(
             request,
             action="auth.signup",

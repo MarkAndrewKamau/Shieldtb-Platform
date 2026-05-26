@@ -10,10 +10,17 @@ transparent risk scoring, household contact tracing, community health worker
 (CHW) task assignment, notifications, and facility-level analytics. Every
 sensitive action is audited.
 
-This repository currently contains the backend service. It is implemented as a
-Django modular monolith with a REST API, designed so that individual domains can
-be extracted into independent services later, only when real scale or team
-boundaries justify the cost.
+This repository now contains:
+
+- a Django backend service under [`backend/`](backend/)
+- a mobile app under [`apps/mobile/`](apps/mobile/)
+- shared frontend packages under [`packages/`](packages/)
+
+The backend is implemented as a Django modular monolith with a REST API,
+designed so that individual domains can be extracted into independent services
+later, only when real scale or team boundaries justify the cost. The frontend
+starts mobile-first for CHW workflows, while the web dashboard layer is planned
+to follow on the same API contract.
 
 ---
 
@@ -106,6 +113,15 @@ The full architecture narrative lives in [`docs/architecture.md`](docs/architect
 | Testing            | pytest with `pytest-django`                         |
 | CI                 | GitHub Actions                                      |
 
+Mobile frontend stack:
+
+- Expo + React Native
+- Expo Router
+- TanStack Query
+- Zustand
+- React Hook Form
+- Expo Secure Store
+
 Asynchronous infrastructure (Celery and Redis) is intentionally **not** a
 current dependency. See [Engineering Tradeoffs](#engineering-tradeoffs) for the
 reasoning and the triggers for introducing it.
@@ -196,9 +212,10 @@ Full detail is in [`docs/security.md`](docs/security.md); the key controls are:
 - **Revocable access tokens.** Each access token carries a `jti`; logout records
   it in a database-backed blocklist so a stolen token can be revoked before its
   natural expiry.
-- **HttpOnly cookie delivery.** Tokens are delivered to browser clients through
-  HttpOnly cookies, with CSRF enforcement on unsafe requests. Raw access and
-  refresh tokens are never returned in the login response body.
+- **Client-specific token delivery.** Browser clients receive tokens through
+  HttpOnly cookies with CSRF enforcement on unsafe requests. Native/mobile
+  clients may explicitly request `auth_mode: "token"` and store the returned
+  access/refresh pair in device secure storage.
 - **Algorithm hardening.** The signing algorithm is fixed server-side. The
   `alg: none` attack is rejected by configuration and covered by tests; token
   headers never influence verification behaviour.

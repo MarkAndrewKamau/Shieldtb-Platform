@@ -111,6 +111,84 @@ def test_login_sets_httponly_cookies_without_returning_raw_tokens(clinician):
 
 
 @pytest.mark.django_db
+def test_login_can_return_tokens_for_mobile_clients(clinician):
+    client = APIClient()
+
+    response = client.post(
+        reverse("token-login"),
+        {
+            "username": "clinician",
+            "password": "a-very-secure-test-password",
+            "auth_mode": "token",
+        },
+        format="json",
+    )
+
+    assert response.status_code == 200
+    assert response.data["user"]["username"] == "clinician"
+    assert "access" in response.data
+    assert "refresh" in response.data
+    assert settings.JWT_AUTH_COOKIE not in response.cookies
+    assert settings.JWT_REFRESH_COOKIE not in response.cookies
+
+
+@pytest.mark.django_db
+def test_signup_can_return_tokens_for_mobile_clients(facility):
+    client = APIClient()
+
+    response = client.post(
+        reverse("token-signup"),
+        {
+            "username": "mobilechw",
+            "email": "mobilechw@example.com",
+            "first_name": "Mobile",
+            "last_name": "User",
+            "role": User.Role.CHW,
+            "facility": facility.id,
+            "phone": "+254700000199",
+            "password": "a-very-secure-test-password",
+            "auth_mode": "token",
+        },
+        format="json",
+    )
+
+    assert response.status_code == 201
+    assert "access" in response.data
+    assert "refresh" in response.data
+    assert settings.JWT_AUTH_COOKIE not in response.cookies
+    assert settings.JWT_REFRESH_COOKIE not in response.cookies
+
+
+@pytest.mark.django_db
+def test_refresh_can_return_tokens_for_mobile_clients(clinician):
+    client = APIClient()
+    login_response = client.post(
+        reverse("token-login"),
+        {
+            "username": "clinician",
+            "password": "a-very-secure-test-password",
+            "auth_mode": "token",
+        },
+        format="json",
+    )
+
+    response = client.post(
+        reverse("token-refresh"),
+        {
+            "refresh": login_response.data["refresh"],
+            "auth_mode": "token",
+        },
+        format="json",
+    )
+
+    assert response.status_code == 200
+    assert response.data["detail"] == "Token refreshed."
+    assert "access" in response.data
+    assert "refresh" in response.data
+    assert settings.JWT_AUTH_COOKIE not in response.cookies
+
+
+@pytest.mark.django_db
 def test_logout_blocks_current_access_token(clinician):
     client = APIClient()
     login_response = client.post(
