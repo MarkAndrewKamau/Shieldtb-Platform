@@ -9,9 +9,12 @@ ShieldTB uses short-lived access tokens and rotating refresh tokens.
 - Refresh tokens rotate on use and the previous refresh token is blacklisted.
 - Access tokens include a `jti`; logout stores the current `jti` in a blocklist.
 - Tokens are delivered through HttpOnly cookies for browser clients.
+- Native/mobile clients may explicitly request `auth_mode: "token"` and store
+  returned access/refresh tokens in secure device storage.
 - Browser cookie authentication enforces CSRF checks for unsafe requests.
 - API clients may still use `Authorization: Bearer <token>`.
-- Raw access and refresh tokens are not returned from the login response body.
+- Raw access and refresh tokens are not returned from browser-mode login
+  responses.
 
 See `docs/adr/0001-database-backed-access-token-blocklist.md` for the MVP
 decision to use database-backed access-token revocation first, with clear
