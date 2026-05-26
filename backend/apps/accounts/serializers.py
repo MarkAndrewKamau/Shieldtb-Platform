@@ -2,14 +2,18 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+AUTH_MODE_CHOICES = [("cookie", "Cookie"), ("token", "Token")]
+
 
 class LoginRequestSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
+    auth_mode = serializers.ChoiceField(choices=AUTH_MODE_CHOICES, required=False, default="cookie")
 
 
 class RefreshRequestSerializer(serializers.Serializer):
-    refresh = serializers.CharField()
+    refresh = serializers.CharField(required=False)
+    auth_mode = serializers.ChoiceField(choices=AUTH_MODE_CHOICES, required=False, default="cookie")
 
 
 class DetailSerializer(serializers.Serializer):
@@ -77,6 +81,12 @@ class UserSerializer(serializers.ModelSerializer):
 
 class SignupSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=12)
+    auth_mode = serializers.ChoiceField(
+        choices=AUTH_MODE_CHOICES,
+        required=False,
+        default="cookie",
+        write_only=True,
+    )
 
     class Meta:
         model = get_user_model()
@@ -90,6 +100,7 @@ class SignupSerializer(serializers.ModelSerializer):
             "facility",
             "phone",
             "password",
+            "auth_mode",
         ]
         read_only_fields = ["id"]
         extra_kwargs = {
@@ -102,6 +113,7 @@ class SignupSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
+        validated_data.pop("auth_mode", None)
         password = validated_data.pop("password")
         user = self.Meta.model(**validated_data)
         user.set_password(password)
@@ -113,3 +125,11 @@ class SignupSerializer(serializers.ModelSerializer):
 
 class UserEnvelopeSerializer(serializers.Serializer):
     user = UserSerializer()
+    access = serializers.CharField(required=False)
+    refresh = serializers.CharField(required=False)
+
+
+class RefreshResponseSerializer(serializers.Serializer):
+    detail = serializers.CharField()
+    access = serializers.CharField(required=False)
+    refresh = serializers.CharField(required=False)
