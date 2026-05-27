@@ -76,3 +76,6 @@ This produces a schema plus ready-to-share Postman files in
 `backend/docs/generated/`.
 
 Team import and sharing steps live in `docs/api-sharing.md`.
+
+Production-hardening follow-ups that we deliberately defer during development
+are tracked in `docs/dev-to-prod-tracker.md`.
