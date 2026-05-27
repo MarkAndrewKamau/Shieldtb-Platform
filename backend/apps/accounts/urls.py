@@ -5,11 +5,13 @@ from apps.accounts.views import (
     MeView,
     SecureTokenObtainPairView,
     SecureTokenRefreshView,
+    SignupFacilityLookupView,
     SignupView,
 )
 
 urlpatterns = [
     path("signup/", SignupView.as_view(), name="token-signup"),
+    path("signup/facilities/", SignupFacilityLookupView.as_view(), name="signup-facility-lookup"),
     path("login/", SecureTokenObtainPairView.as_view(), name="token-login"),
     path("refresh/", SecureTokenRefreshView.as_view(), name="token-refresh"),
     path("logout/", LogoutView.as_view(), name="token-logout"),
