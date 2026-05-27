@@ -40,6 +40,10 @@
       "value": ""
     },
     {
+      "key": "facilitySearch",
+      "value": "Kibera"
+    },
+    {
       "key": "facilityId",
       "value": ""
     },
@@ -100,6 +104,56 @@
       "name": "Auth",
       "item": [
         {
+          "name": "Search signup facilities",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/signup/facilities/?q={{facilitySearch}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "signup",
+                "facilities"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "{{facilitySearch}}"
+                }
+              ]
+            },
+            "description": "Returns active facilities matching a name or facility code for account signup.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const response = pm.response.json();",
+                  "if (response && response.id) {",
+                  "  pm.environment.set(\"facilityId\", response.id);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Sign up",
           "request": {
             "method": "POST",
@@ -125,7 +179,7 @@
                 "signup"
               ]
             },
-            "description": "Creates a non-admin user account and sets HttpOnly JWT cookies.",
+            "description": "Creates a non-admin user account. Browser clients default to HttpOnly JWT cookies; native clients may request `auth_mode: \"token\"` to receive tokens in the body.",
             "auth": {
               "type": "noauth"
             },
@@ -191,7 +245,7 @@
                 "login"
               ]
             },
-            "description": "Authenticates a user and sets HttpOnly JWT cookies.",
+            "description": "Authenticates a user. Browser clients default to HttpOnly JWT cookies; native clients may request `auth_mode: \"token\"` to receive tokens in the body.",
             "auth": {
               "type": "noauth"
             },
@@ -283,7 +337,7 @@
                 "refresh"
               ]
             },
-            "description": "Rotates the refresh token and updates HttpOnly JWT cookies.",
+            "description": "Rotates the refresh token. Browser clients default to updated HttpOnly cookies; native clients may request `auth_mode: \"token\"` to receive fresh tokens in the body.",
             "auth": {
               "type": "noauth"
             },
