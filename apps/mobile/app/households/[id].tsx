@@ -1,6 +1,6 @@
 import type { HouseholdContactStatus } from "@shieldtb/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLocalSearchParams } from "expo-router";
+import { Redirect, useLocalSearchParams } from "expo-router";
 import { MapPinned } from "lucide-react-native";
 import { useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
@@ -24,6 +24,7 @@ const CONTACT_STATUS_OPTIONS: HouseholdContactStatus[] = [
 export default function HouseholdDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
   const queryClient = useQueryClient();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const authorizedCall = useAuthStore((state) => state.authorizedCall);
   const [expandedContactId, setExpandedContactId] = useState<number | null>(null);
   const householdId = Number(params.id);
@@ -31,7 +32,7 @@ export default function HouseholdDetailScreen() {
   const householdQuery = useQuery({
     queryKey: ["household", householdId],
     queryFn: () => authorizedCall((accessToken) => apiClient.getHousehold(householdId, accessToken)),
-    enabled: Number.isFinite(householdId),
+    enabled: isAuthenticated && Number.isFinite(householdId),
   });
 
   const updateContactMutation = useMutation({
@@ -43,6 +44,10 @@ export default function HouseholdDetailScreen() {
       void queryClient.invalidateQueries({ queryKey: ["workflow-tasks"] });
     },
   });
+
+  if (!isAuthenticated) {
+    return <Redirect href="/login" />;
+  }
 
   if (householdQuery.isLoading) {
     return <LoadingBlock label="Loading household..." />;
