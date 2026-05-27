@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAuthStore } from "../src/stores/auth";
+import { formatLoginError } from "../src/lib/errors";
 
 type LoginForm = {
   username: string;
@@ -25,6 +26,8 @@ export default function LoginScreen() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const sessionMessage = useAuthStore((state) => state.sessionMessage);
+  const clearSessionMessage = useAuthStore((state) => state.clearSessionMessage);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const {
     control,
@@ -42,12 +45,13 @@ export default function LoginScreen() {
   }
 
   const onSubmit = handleSubmit(async (values) => {
+    clearSessionMessage();
     setSubmitError(null);
     try {
       await login(values.username.trim(), values.password);
       router.replace("/tasks");
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : "Login failed.");
+      setSubmitError(formatLoginError(error));
     }
   });
 
@@ -109,10 +113,10 @@ export default function LoginScreen() {
           />
           {errors.password ? <Text style={styles.fieldError}>{errors.password.message}</Text> : null}
 
-          {submitError ? (
+          {sessionMessage || submitError ? (
             <View style={styles.errorBanner}>
               <TriangleAlert color="#b91c1c" size={18} />
-              <Text style={styles.errorBannerText}>{submitError}</Text>
+              <Text style={styles.errorBannerText}>{sessionMessage ?? submitError}</Text>
             </View>
           ) : null}
 

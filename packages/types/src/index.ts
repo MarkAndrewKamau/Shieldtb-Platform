@@ -50,6 +50,16 @@ export interface AuthEnvelope {
   refresh?: string;
 }
 
+export interface FacilitySummary {
+  id: number;
+  name: string;
+  code: string;
+  facility_type: string;
+  county: string;
+  sub_county: string;
+  ward: string;
+}
+
 export interface RefreshResponse {
   detail: string;
   access?: string;

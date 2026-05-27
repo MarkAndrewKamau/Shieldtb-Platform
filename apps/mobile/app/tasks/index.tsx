@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { router } from "expo-router";
-import { LogOut, RefreshCcw } from "lucide-react-native";
+import { Redirect, router } from "expo-router";
+import { RefreshCcw, UserRound } from "lucide-react-native";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -14,15 +14,20 @@ import { useAuthStore } from "../../src/stores/auth";
 export default function TaskListScreen() {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const authorizedCall = useAuthStore((state) => state.authorizedCall);
 
   const tasksQuery = useQuery({
     queryKey: ["workflow-tasks"],
     queryFn: () => authorizedCall((accessToken) => apiClient.listWorkflowTasks(accessToken)),
+    enabled: isAuthenticated,
   });
 
   const assignedCount = tasksQuery.data?.length ?? 0;
+
+  if (!isAuthenticated) {
+    return <Redirect href="/login" />;
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -51,14 +56,13 @@ export default function TaskListScreen() {
                     <RefreshCcw color="#0f172a" size={18} />
                   </Pressable>
                   <Pressable
-                    accessibilityLabel="Log out"
+                    accessibilityLabel="Open account"
                     onPress={() => {
-                      void logout();
-                      router.replace("/login");
+                      router.push("/account");
                     }}
                     style={styles.iconButton}
                   >
-                    <LogOut color="#0f172a" size={18} />
+                    <UserRound color="#0f172a" size={18} />
                   </Pressable>
                 </View>
               }

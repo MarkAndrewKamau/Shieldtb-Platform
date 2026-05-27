@@ -1,6 +1,6 @@
-import type { ApiError } from "@shieldtb/api-client";
-import type { UserRole } from "@shieldtb/types";
-import { ChevronLeft, Shield, TriangleAlert } from "lucide-react-native";
+import type { FacilitySummary, UserRole } from "@shieldtb/types";
+import { useQuery } from "@tanstack/react-query";
+import { Building2, Check, ChevronLeft, Shield, TriangleAlert } from "lucide-react-native";
 import { Redirect, useRouter } from "expo-router";
 import {
   Controller,
@@ -24,6 +24,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { useAuthStore } from "../src/stores/auth";
+import { formatApiError } from "../src/lib/errors";
+import { apiClient } from "../src/lib/api";
 
 type SignupForm = {
   username: string;
@@ -48,9 +50,12 @@ export default function SignupScreen() {
   const signup = useAuthStore((state) => state.signup);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [facilitySearch, setFacilitySearch] = useState("");
+  const [selectedFacility, setSelectedFacility] = useState<FacilitySummary | null>(null);
   const {
     control,
     handleSubmit,
+    setValue,
     watch,
     formState: { errors, isSubmitting },
   } = useForm<SignupForm>({
@@ -67,6 +72,12 @@ export default function SignupScreen() {
   });
 
   const selectedRole = watch("role");
+  const facilityQuery = facilitySearch.trim();
+  const facilitiesQuery = useQuery({
+    queryKey: ["signup-facilities", facilityQuery],
+    queryFn: () => apiClient.searchSignupFacilities(facilityQuery),
+    enabled: facilityQuery.length >= 2 && !selectedFacility,
+  });
 
   if (isAuthenticated) {
     return <Redirect href="/tasks" />;
@@ -87,7 +98,7 @@ export default function SignupScreen() {
       });
       router.replace("/tasks");
     } catch (error) {
-      setSubmitError(formatApiError(error));
+      setSubmitError(formatApiError(error, "Could not create account. Please try again."));
     }
   });
 
@@ -109,7 +120,7 @@ export default function SignupScreen() {
             </View>
             <Text style={styles.title}>Create account</Text>
             <Text style={styles.subtitle}>
-              Register a non-admin account for mobile field workflows. You will need your facility ID.
+              Register for mobile field workflows and select the facility where you work.
             </Text>
           </View>
 
@@ -195,19 +206,82 @@ export default function SignupScreen() {
               error={errors.phone?.message}
             />
 
-            <FormInput
-              control={control}
-              name="facilityId"
-              label="Facility ID"
-              placeholder="Ask your facility admin for this ID"
-              keyboardType="number-pad"
-              rules={{
-                required: "Facility ID is required.",
-                validate: (value) =>
-                  /^\d+$/.test(value) || "Facility ID must be a numeric ID from the backend.",
-              }}
-              error={errors.facilityId?.message}
-            />
+            <LabeledField label="Facility" error={errors.facilityId?.message}>
+              <Controller
+                control={control}
+                name="facilityId"
+                rules={{ required: "Select your facility to continue." }}
+                render={() => (
+                  <>
+                    <View style={styles.searchWrap}>
+                      <Building2 color="#64748b" size={18} />
+                      <TextInput
+                        autoCapitalize="words"
+                        autoCorrect={false}
+                        onChangeText={(value) => {
+                          setFacilitySearch(value);
+                          if (selectedFacility) {
+                            setSelectedFacility(null);
+                            setValue("facilityId", "", { shouldValidate: true });
+                          }
+                        }}
+                        placeholder="Search facility name or code"
+                        placeholderTextColor="#94a3b8"
+                        style={styles.searchInput}
+                        value={facilitySearch}
+                      />
+                    </View>
+
+                    {selectedFacility ? (
+                      <View style={styles.selectedFacility}>
+                        <View style={styles.facilityCopy}>
+                          <Text style={styles.facilityName}>{selectedFacility.name}</Text>
+                          <Text style={styles.facilityMeta}>
+                            {selectedFacility.code}
+                            {selectedFacility.county ? `  |  ${selectedFacility.county}` : ""}
+                          </Text>
+                        </View>
+                        <Check color="#0f766e" size={20} />
+                      </View>
+                    ) : facilityQuery.length < 2 ? (
+                      <Text style={styles.helperText}>Enter at least 2 characters to find a facility.</Text>
+                    ) : facilitiesQuery.isLoading ? (
+                      <Text style={styles.helperText}>Searching facilities...</Text>
+                    ) : facilitiesQuery.isError ? (
+                      <Text style={styles.fieldError}>Facility search is unavailable. Try again.</Text>
+                    ) : facilitiesQuery.data?.length === 0 ? (
+                      <Text style={styles.helperText}>No active facilities match that search.</Text>
+                    ) : (
+                      <View style={styles.facilityResults}>
+                        {(facilitiesQuery.data ?? []).map((facility) => (
+                          <Pressable
+                            key={facility.id}
+                            accessibilityRole="button"
+                            onPress={() => {
+                              setSelectedFacility(facility);
+                              setFacilitySearch(`${facility.name} (${facility.code})`);
+                              setValue("facilityId", String(facility.id), {
+                                shouldValidate: true,
+                              });
+                            }}
+                            style={({ pressed }) => [
+                              styles.facilityOption,
+                              pressed ? styles.facilityOptionPressed : null,
+                            ]}
+                          >
+                            <Text style={styles.facilityName}>{facility.name}</Text>
+                            <Text style={styles.facilityMeta}>
+                              {facility.code}
+                              {facility.county ? `  |  ${facility.county}` : ""}
+                            </Text>
+                          </Pressable>
+                        ))}
+                      </View>
+                    )}
+                  </>
+                )}
+              />
+            </LabeledField>
 
             <FormInput
               control={control}
@@ -330,34 +404,6 @@ function formatRole(role: Exclude<UserRole, "admin">): string {
     .join(" ");
 }
 
-function formatApiError(error: unknown): string {
-  const maybeApiError = error as ApiError | undefined;
-  if (maybeApiError && typeof maybeApiError === "object" && "data" in maybeApiError) {
-    const { data } = maybeApiError;
-    if (typeof data === "string") {
-      return data;
-    }
-    if (data && typeof data === "object") {
-      const entries = Object.entries(data as Record<string, unknown>).flatMap(([field, value]) => {
-        if (Array.isArray(value)) {
-          return value.map((item) => `${humanizeField(field)}: ${String(item)}`);
-        }
-        return [`${humanizeField(field)}: ${String(value)}`];
-      });
-      if (entries.length > 0) {
-        return entries.join("\n");
-      }
-    }
-  }
-  return error instanceof Error ? error.message : "Could not create account.";
-}
-
-function humanizeField(field: string): string {
-  return field
-    .replace(/_/g, " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
-}
-
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
@@ -423,6 +469,62 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     fontSize: 16,
     color: "#0f172a",
+  },
+  searchWrap: {
+    height: 52,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderColor: "#cbd5e1",
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    backgroundColor: "#ffffff",
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: "#0f172a",
+  },
+  facilityResults: {
+    gap: 8,
+  },
+  facilityOption: {
+    gap: 4,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    backgroundColor: "#ffffff",
+  },
+  facilityOptionPressed: {
+    backgroundColor: "#f0fdfa",
+    borderColor: "#99f6e4",
+  },
+  selectedFacility: {
+    minHeight: 56,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#99f6e4",
+    backgroundColor: "#f0fdfa",
+  },
+  facilityCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  facilityName: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#0f172a",
+  },
+  facilityMeta: {
+    fontSize: 12,
+    color: "#475569",
   },
   roleGrid: {
     flexDirection: "row",

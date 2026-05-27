@@ -1,7 +1,12 @@
 from datetime import UTC, datetime
 
 from django.conf import settings
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from django.db.models import Q
+from drf_spectacular.utils import (
+    OpenApiParameter,
+    extend_schema,
+    extend_schema_view,
+)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -17,14 +22,16 @@ from apps.accounts.permissions import CanManageUsers
 from apps.accounts.serializers import (
     DetailSerializer,
     LoginRequestSerializer,
-    RefreshResponseSerializer,
     RefreshRequestSerializer,
+    RefreshResponseSerializer,
     ShieldTBTokenObtainPairSerializer,
+    SignupFacilitySerializer,
     SignupSerializer,
     UserEnvelopeSerializer,
     UserSerializer,
 )
 from apps.audit.services import record_audit_event
+from apps.facilities.models import Facility
 
 
 @extend_schema(
@@ -139,6 +146,36 @@ class SignupView(APIView):
             actor=user,
         )
         return response
+
+
+@extend_schema(
+    tags=["Auth"],
+    parameters=[
+        OpenApiParameter(
+            name="q",
+            description="Facility name or code search text. Enter at least two characters.",
+            required=True,
+            type=str,
+        )
+    ],
+    responses={200: SignupFacilitySerializer(many=True)},
+    summary="Search signup facilities",
+    description="Returns active facilities matching a name or facility code for account signup.",
+)
+class SignupFacilityLookupView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        query = str(request.query_params.get("q", "")).strip()
+        if len(query) < 2:
+            return Response([])
+
+        facilities = (
+            Facility.objects.filter(is_active=True)
+            .filter(Q(name__icontains=query) | Q(code__icontains=query))
+            .order_by("name")[:10]
+        )
+        return Response(SignupFacilitySerializer(facilities, many=True).data)
 
 
 @extend_schema(

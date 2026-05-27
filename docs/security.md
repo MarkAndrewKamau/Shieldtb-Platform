@@ -56,3 +56,9 @@ permissions lists, passwords, or other sensitive PII in JWT payloads.
 Audit events store action, actor, resource, IP address, user agent, and redacted
 metadata. Raw `Authorization`, cookie, access-token, refresh-token, and password
 values must never be stored in logs or audit metadata.
+
+## Dev vs Prod Follow-Ups
+
+Security-related development compromises and their production follow-ups are
+tracked in
+[`docs/dev-to-prod-tracker.md`](/home/markandrew/Tb-Solution/Shieldtb-Platform/docs/dev-to-prod-tracker.md).

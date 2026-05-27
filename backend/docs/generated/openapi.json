@@ -234,7 +234,7 @@
     "/api/v1/auth/login/": {
       "post": {
         "operationId": "auth_login_create",
-        "description": "Authenticates a user and sets HttpOnly JWT cookies.",
+        "description": "Authenticates a user. Browser clients default to HttpOnly JWT cookies; native clients may request `auth_mode: \"token\"` to receive tokens in the body.",
         "summary": "Log in",
         "tags": [
           "Auth"
@@ -304,8 +304,7 @@
                 "$ref": "#/components/schemas/RefreshRequestRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "security": [
           {
@@ -374,7 +373,7 @@
     "/api/v1/auth/refresh/": {
       "post": {
         "operationId": "auth_refresh_create",
-        "description": "Rotates the refresh token and updates HttpOnly JWT cookies.",
+        "description": "Rotates the refresh token. Browser clients default to updated HttpOnly cookies; native clients may request `auth_mode: \"token\"` to receive fresh tokens in the body.",
         "summary": "Refresh token",
         "tags": [
           "Auth"
@@ -396,8 +395,7 @@
                 "$ref": "#/components/schemas/RefreshRequestRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "security": [
           {
@@ -419,7 +417,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Detail"
+                  "$ref": "#/components/schemas/RefreshResponse"
                 }
               }
             },
@@ -431,7 +429,7 @@
     "/api/v1/auth/signup/": {
       "post": {
         "operationId": "auth_signup_create",
-        "description": "Creates a non-admin user account and sets HttpOnly JWT cookies.",
+        "description": "Creates a non-admin user account. Browser clients default to HttpOnly JWT cookies; native clients may request `auth_mode: \"token\"` to receive tokens in the body.",
         "summary": "Sign up",
         "tags": [
           "Auth"
@@ -477,6 +475,57 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserEnvelope"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
+    "/api/v1/auth/signup/facilities/": {
+      "get": {
+        "operationId": "auth_signup_facilities_list",
+        "description": "Returns active facilities matching a name or facility code for account signup.",
+        "summary": "Search signup facilities",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Facility name or code search text. Enter at least two characters.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Auth"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          },
+          {}
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SignupFacility"
+                  }
                 }
               }
             },
@@ -2603,6 +2652,14 @@
   },
   "components": {
     "schemas": {
+      "AuthModeEnum": {
+        "enum": [
+          "cookie",
+          "token"
+        ],
+        "type": "string",
+        "description": "* `cookie` - Cookie\n* `token` - Token"
+      },
       "ClinicalEncounter": {
         "type": "object",
         "properties": {
@@ -3563,6 +3620,14 @@
             "type": "string",
             "writeOnly": true,
             "minLength": 1
+          },
+          "auth_mode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AuthModeEnum"
+              }
+            ],
+            "default": "cookie"
           }
         },
         "required": [
@@ -4077,10 +4142,32 @@
           "refresh": {
             "type": "string",
             "minLength": 1
+          },
+          "auth_mode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AuthModeEnum"
+              }
+            ],
+            "default": "cookie"
+          }
+        }
+      },
+      "RefreshResponse": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "string"
+          },
+          "access": {
+            "type": "string"
+          },
+          "refresh": {
+            "type": "string"
           }
         },
         "required": [
-          "refresh"
+          "detail"
         ]
       },
       "RiskAssessment": {
@@ -4166,6 +4253,44 @@
         "type": "string",
         "description": "* `female` - Female\n* `male` - Male\n* `intersex` - Intersex\n* `unknown` - Unknown"
       },
+      "SignupFacility": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "facility_type": {
+            "$ref": "#/components/schemas/FacilityTypeEnum"
+          },
+          "county": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "sub_county": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "ward": {
+            "type": "string",
+            "maxLength": 100
+          }
+        },
+        "required": [
+          "code",
+          "facility_type",
+          "id",
+          "name"
+        ]
+      },
       "SignupRequest": {
         "type": "object",
         "properties": {
@@ -4205,6 +4330,15 @@
             "type": "string",
             "writeOnly": true,
             "minLength": 12
+          },
+          "auth_mode": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AuthModeEnum"
+              }
+            ],
+            "writeOnly": true,
+            "default": "cookie"
           }
         },
         "required": [
@@ -4296,6 +4430,12 @@
         "properties": {
           "user": {
             "$ref": "#/components/schemas/User"
+          },
+          "access": {
+            "type": "string"
+          },
+          "refresh": {
+            "type": "string"
           }
         },
         "required": [

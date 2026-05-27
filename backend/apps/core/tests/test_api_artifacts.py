@@ -21,6 +21,12 @@ def test_schema_endpoint_is_available(client):
 def test_build_postman_collection_marks_public_endpoints_as_noauth():
     schema = {
         "paths": {
+            "/api/v1/auth/signup/facilities/": {
+                "get": {
+                    "summary": "Search signup facilities",
+                    "tags": ["Auth"],
+                }
+            },
             "/api/v1/auth/login/": {
                 "post": {
                     "summary": "Log in",
@@ -47,6 +53,11 @@ def test_build_postman_collection_marks_public_endpoints_as_noauth():
     collection = build_postman_collection(schema)
     request = find_collection_request(collection, "Auth", "Log in")
     assert request["request"]["auth"]["type"] == "noauth"
+    lookup_request = find_collection_request(collection, "Auth", "Search signup facilities")
+    assert lookup_request["request"]["auth"]["type"] == "noauth"
+    assert lookup_request["request"]["url"]["query"] == [
+        {"key": "q", "value": "{{facilitySearch}}"}
+    ]
 
 
 def test_build_postman_collection_uses_tailored_examples_and_variables():

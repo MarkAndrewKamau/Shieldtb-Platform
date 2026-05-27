@@ -33,6 +33,7 @@ POSTMAN_VARIABLES = [
     ("email", "", "default"),
     ("accessToken", "", "secret"),
     ("refreshToken", "", "secret"),
+    ("facilitySearch", "Kibera", "default"),
     ("facilityId", "", "default"),
     ("patientId", "", "default"),
     ("encounterId", "", "default"),
@@ -242,8 +243,13 @@ REQUEST_BODY_OVERRIDES = {
     },
 }
 
+QUERY_PARAMETER_OVERRIDES = {
+    "/api/v1/auth/signup/facilities/": [{"key": "q", "value": "{{facilitySearch}}"}],
+}
+
 REQUEST_ORDER = {
     ("GET", "/health/"): 10,
+    ("GET", "/api/v1/auth/signup/facilities/"): 15,
     ("POST", "/api/v1/auth/signup/"): 20,
     ("POST", "/api/v1/auth/login/"): 30,
     ("GET", "/api/v1/auth/me/"): 40,
@@ -413,11 +419,17 @@ def build_headers(operation: dict) -> list[dict]:
 def build_url(path: str) -> dict:
     raw_path = re.sub(r"{([^}]+)}", r"{{\1}}", path)
     path_parts = [part for part in raw_path.strip("/").split("/") if part]
-    return {
+    query = QUERY_PARAMETER_OVERRIDES.get(path, [])
+    raw_query = "&".join(f'{item["key"]}={item["value"]}' for item in query)
+    url = {
         "raw": "{{baseUrl}}" + raw_path,
         "host": ["{{baseUrl}}"],
         "path": path_parts,
     }
+    if query:
+        url["raw"] = f'{url["raw"]}?{raw_query}'
+        url["query"] = query
+    return url
 
 
 def is_public_endpoint(path: str) -> bool:
@@ -427,6 +439,7 @@ def is_public_endpoint(path: str) -> bool:
         "/api/schema/swagger/",
         "/api/v1/auth/login/",
         "/api/v1/auth/signup/",
+        "/api/v1/auth/signup/facilities/",
         "/api/v1/auth/refresh/",
     }
 
@@ -439,6 +452,8 @@ def build_events(path: str) -> list[dict]:
     }:
         return [postman_test_event(cookie_capture_script())]
     if path == "/api/v1/facilities/":
+        return [postman_test_event(variable_capture_script("facilityId"))]
+    if path == "/api/v1/auth/signup/facilities/":
         return [postman_test_event(variable_capture_script("facilityId"))]
     if path == "/api/v1/patients/":
         return [postman_test_event(variable_capture_script("patientId"))]
