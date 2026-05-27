@@ -19,10 +19,12 @@ type AuthState = {
   user: User | null;
   isHydrated: boolean;
   isAuthenticated: boolean;
+  sessionMessage: string | null;
   initialize: () => Promise<void>;
   login: (username: string, password: string) => Promise<void>;
   signup: (payload: SignupRequest) => Promise<void>;
   logout: () => Promise<void>;
+  clearSessionMessage: () => void;
   refreshSession: () => Promise<string>;
   authorizedCall: <T>(operation: AuthorizedOperation<T>) => Promise<T>;
 };
@@ -33,6 +35,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   isHydrated: false,
   isAuthenticated: false,
+  sessionMessage: null,
 
   initialize: async () => {
     const [accessToken, refreshToken, userJson] = await Promise.all([
@@ -49,6 +52,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         user: null,
         isHydrated: true,
         isAuthenticated: false,
+        sessionMessage: null,
       });
       return;
     }
@@ -77,8 +81,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         user,
         isHydrated: true,
         isAuthenticated: true,
+        sessionMessage: null,
       });
-    } catch {
+    } catch (error) {
       await clearSession();
       set({
         accessToken: null,
@@ -86,6 +91,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         user: null,
         isHydrated: true,
         isAuthenticated: false,
+        sessionMessage: isUnauthenticated(error)
+          ? "Your session expired. Sign in again to continue."
+          : "We could not restore your session. Sign in again to continue.",
       });
     }
   },
@@ -108,6 +116,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       user: response.user,
       isHydrated: true,
       isAuthenticated: true,
+      sessionMessage: null,
     });
   },
 
@@ -129,6 +138,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       user: response.user,
       isHydrated: true,
       isAuthenticated: true,
+      sessionMessage: null,
     });
   },
 
@@ -151,8 +161,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       user: null,
       isHydrated: true,
       isAuthenticated: false,
+      sessionMessage: null,
     });
   },
+
+  clearSessionMessage: () => set({ sessionMessage: null }),
 
   refreshSession: async () => {
     const refreshToken = get().refreshToken;
@@ -190,11 +203,31 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       return await operation(accessToken);
     } catch (error) {
-      if (error instanceof ApiError && error.status === 401 && get().refreshToken) {
-        const refreshedAccessToken = await get().refreshSession();
-        return operation(refreshedAccessToken);
+      if (!isUnauthenticated(error)) {
+        throw error;
       }
-      throw error;
+
+      if (get().refreshToken) {
+        try {
+          const refreshedAccessToken = await get().refreshSession();
+          return await operation(refreshedAccessToken);
+        } catch (retryError) {
+          if (!isUnauthenticated(retryError)) {
+            throw retryError;
+          }
+        }
+      }
+
+      await clearSession();
+      set({
+        accessToken: null,
+        refreshToken: null,
+        user: null,
+        isHydrated: true,
+        isAuthenticated: false,
+        sessionMessage: "Your session expired. Sign in again to continue.",
+      });
+      throw new Error("Your session expired. Sign in again to continue.");
     }
   },
 }));
@@ -241,4 +274,8 @@ async function persistValue(key: string, value: string | null): Promise<void> {
     return;
   }
   await SecureStore.setItemAsync(key, value);
+}
+
+function isUnauthenticated(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 401;
 }
