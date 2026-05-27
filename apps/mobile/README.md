@@ -31,3 +31,8 @@ The mobile app uses the backend's native-client auth path:
 - `POST /api/v1/auth/refresh/` with `auth_mode: "token"`
 
 Tokens are stored in device secure storage, not in web cookies.
+
+## Roadmap
+
+Frontend/mobile progress and upcoming phases are tracked in
+[`docs/frontend-roadmap.md`](/home/markandrew/Tb-Solution/Shieldtb-Platform/docs/frontend-roadmap.md).

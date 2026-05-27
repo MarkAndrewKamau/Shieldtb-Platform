@@ -87,6 +87,47 @@ def test_signup_rejects_admin_role(facility):
 
 
 @pytest.mark.django_db
+def test_signup_facility_lookup_returns_only_matching_active_facilities(facility):
+    Facility.objects.create(
+        name="Hidden Kibera Clinic",
+        code="KE-NBO-KIB-INACTIVE",
+        facility_type=Facility.FacilityType.DISPENSARY,
+        is_active=False,
+    )
+    Facility.objects.create(
+        name="Mbagathi Hospital",
+        code="KE-NBO-MBA-001",
+        facility_type=Facility.FacilityType.HOSPITAL,
+    )
+    client = APIClient()
+
+    response = client.get(reverse("signup-facility-lookup"), {"q": "KIB"})
+
+    assert response.status_code == 200
+    assert response.data == [
+        {
+            "id": facility.id,
+            "name": "Kibera Dispensary",
+            "code": "KE-NBO-KIB-001",
+            "facility_type": Facility.FacilityType.DISPENSARY,
+            "county": "Nairobi",
+            "sub_county": "Kibra",
+            "ward": "",
+        }
+    ]
+
+
+@pytest.mark.django_db
+def test_signup_facility_lookup_requires_search_term(facility):
+    client = APIClient()
+
+    response = client.get(reverse("signup-facility-lookup"), {"q": "K"})
+
+    assert response.status_code == 200
+    assert response.data == []
+
+
+@pytest.mark.django_db
 def test_login_sets_httponly_cookies_without_returning_raw_tokens(clinician):
     client = APIClient()
 

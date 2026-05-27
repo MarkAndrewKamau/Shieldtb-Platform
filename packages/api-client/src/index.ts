@@ -1,5 +1,6 @@
 import type {
   AuthEnvelope,
+  FacilitySummary,
   Household,
   HouseholdContact,
   HouseholdContactStatus,
@@ -60,6 +61,12 @@ export class ShieldTBApiClient {
     });
   }
 
+  async searchSignupFacilities(query: string): Promise<FacilitySummary[]> {
+    return this.request<FacilitySummary[]>(
+      `/api/v1/auth/signup/facilities/?q=${encodeURIComponent(query)}`,
+    );
+  }
+
   async refresh(payload: RefreshRequest): Promise<RefreshResponse> {
     return this.request<RefreshResponse>("/api/v1/auth/refresh/", {
       method: "POST",
@@ -77,6 +84,10 @@ export class ShieldTBApiClient {
 
   async me(accessToken: string): Promise<User> {
     return this.request<User>("/api/v1/auth/me/", { accessToken });
+  }
+
+  async listFacilities(accessToken: string): Promise<FacilitySummary[]> {
+    return this.request<FacilitySummary[]>("/api/v1/facilities/", { accessToken });
   }
 
   async listWorkflowTasks(accessToken: string): Promise<WorkflowTask[]> {
