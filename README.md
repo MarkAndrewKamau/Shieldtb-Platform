@@ -39,6 +39,7 @@ to follow on the same API contract.
 - [API Artifacts](#api-artifacts)
 - [Project Structure](#project-structure)
 - [Delivery History](#delivery-history)
+- [Frontend Roadmap](#frontend-roadmap)
 
 ---
 
@@ -433,3 +434,10 @@ the TB care cascade:
    records for workflow-task assignment, and a read-only notifications API.
 6. **Analytics** — live facility summary endpoints, daily facility metric
    snapshots, and an admin/analyst refresh path.
+
+---
+
+## Frontend Roadmap
+
+Frontend progress and the remaining mobile-first/web-next plan live in
+[`docs/frontend-roadmap.md`](docs/frontend-roadmap.md).
