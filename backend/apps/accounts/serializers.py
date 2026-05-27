@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+from apps.facilities.models import Facility
+
 AUTH_MODE_CHOICES = [("cookie", "Cookie"), ("token", "Token")]
 
 
@@ -18,6 +20,12 @@ class RefreshRequestSerializer(serializers.Serializer):
 
 class DetailSerializer(serializers.Serializer):
     detail = serializers.CharField()
+
+
+class SignupFacilitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Facility
+        fields = ["id", "name", "code", "facility_type", "county", "sub_county", "ward"]
 
 
 class ShieldTBTokenObtainPairSerializer(TokenObtainPairSerializer):
