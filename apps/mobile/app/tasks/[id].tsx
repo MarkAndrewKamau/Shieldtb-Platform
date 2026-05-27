@@ -1,6 +1,6 @@
 import type { WorkflowTaskStatus } from "@shieldtb/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 import { ArrowRight, House, RefreshCcw } from "lucide-react-native";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
@@ -23,13 +23,14 @@ export default function TaskDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const authorizedCall = useAuthStore((state) => state.authorizedCall);
   const taskId = Number(params.id);
 
   const taskQuery = useQuery({
     queryKey: ["workflow-task", taskId],
     queryFn: () => authorizedCall((accessToken) => apiClient.getWorkflowTask(taskId, accessToken)),
-    enabled: Number.isFinite(taskId),
+    enabled: isAuthenticated && Number.isFinite(taskId),
   });
 
   const updateStatusMutation = useMutation({
@@ -42,6 +43,10 @@ export default function TaskDetailScreen() {
       void queryClient.invalidateQueries({ queryKey: ["workflow-tasks"] });
     },
   });
+
+  if (!isAuthenticated) {
+    return <Redirect href="/login" />;
+  }
 
   if (taskQuery.isLoading) {
     return <LoadingBlock label="Loading task detail..." />;
