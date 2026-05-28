@@ -3,6 +3,7 @@ import { ArrowRight, House } from "lucide-react-native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { StatusBadge } from "./StatusBadge";
+import { dueState, formatLabel } from "../lib/format";
 
 type TaskCardProps = {
   task: WorkflowTask;
@@ -10,6 +11,8 @@ type TaskCardProps = {
 };
 
 export function TaskCard({ task, onPress }: TaskCardProps) {
+  const due = dueState(task.due_at);
+
   return (
     <Pressable onPress={onPress} style={styles.card}>
       <View style={styles.header}>
@@ -27,24 +30,20 @@ export function TaskCard({ task, onPress }: TaskCardProps) {
 
       <View style={styles.footer}>
         <StatusBadge value={task.status} />
-        {task.due_at ? <Text style={styles.meta}>Due {formatDate(task.due_at)}</Text> : null}
+        {due ? (
+          <Text
+            style={[
+              styles.meta,
+              due.tone === "overdue" ? styles.overdue : null,
+              due.tone === "dueSoon" ? styles.dueSoon : null,
+            ]}
+          >
+            {due.label}
+          </Text>
+        ) : null}
       </View>
     </Pressable>
   );
-}
-
-function formatLabel(value: string): string {
-  return value
-    .split("_")
-    .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
-    .join(" ");
-}
-
-function formatDate(value: string): string {
-  return new Intl.DateTimeFormat("en-KE", {
-    month: "short",
-    day: "numeric",
-  }).format(new Date(value));
 }
 
 const styles = StyleSheet.create({
@@ -92,5 +91,13 @@ const styles = StyleSheet.create({
   meta: {
     fontSize: 12,
     color: "#64748b",
+  },
+  dueSoon: {
+    color: "#92400e",
+    fontWeight: "700",
+  },
+  overdue: {
+    color: "#b91c1c",
+    fontWeight: "700",
   },
 });

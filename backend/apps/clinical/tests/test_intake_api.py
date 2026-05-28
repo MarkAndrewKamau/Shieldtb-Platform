@@ -104,3 +104,34 @@ def test_create_intake_rejects_cross_facility_patient(clinician, facilities):
     assert response.status_code == 400
     assert ClinicalEncounter.objects.count() == 0
     assert RiskAssessment.objects.count() == 0
+
+
+@pytest.mark.django_db
+def test_clinical_encounter_list_can_filter_by_patient(clinician, patient, facilities):
+    _facility, other = facilities
+    other_patient = Patient.objects.create(
+        given_name="Other",
+        family_name="Patient",
+        facility=other,
+    )
+    own_encounter = ClinicalEncounter.objects.create(
+        patient=patient,
+        facility=patient.facility,
+        encounter_type=ClinicalEncounter.EncounterType.INTAKE,
+        recorded_by=clinician,
+        occurred_at=timezone.now(),
+    )
+    ClinicalEncounter.objects.create(
+        patient=other_patient,
+        facility=other,
+        encounter_type=ClinicalEncounter.EncounterType.INTAKE,
+        recorded_by=clinician,
+        occurred_at=timezone.now(),
+    )
+    client = APIClient()
+    client.force_authenticate(clinician)
+
+    response = client.get(reverse("clinical-encounter-list"), {"patient": patient.id})
+
+    assert response.status_code == 200
+    assert [encounter["id"] for encounter in response.data] == [own_encounter.id]

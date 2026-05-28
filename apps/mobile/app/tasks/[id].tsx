@@ -1,7 +1,7 @@
 import type { WorkflowTaskStatus } from "@shieldtb/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
-import { ArrowRight, House, RefreshCcw } from "lucide-react-native";
+import { ArrowRight, CalendarClock, FileJson, House, RefreshCcw, UserRound } from "lucide-react-native";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { EmptyState } from "../../src/components/EmptyState";
@@ -9,6 +9,7 @@ import { LoadingBlock } from "../../src/components/LoadingBlock";
 import { ScreenHeader } from "../../src/components/ScreenHeader";
 import { StatusBadge } from "../../src/components/StatusBadge";
 import { apiClient } from "../../src/lib/api";
+import { compactValue, dueState, formatDateTime, formatLabel } from "../../src/lib/format";
 import { useAuthStore } from "../../src/stores/auth";
 
 const TASK_STATUS_OPTIONS: WorkflowTaskStatus[] = [
@@ -62,6 +63,19 @@ export default function TaskDetailScreen() {
   }
 
   const task = taskQuery.data;
+  const due = dueState(task.due_at);
+  const metadataEntries = Object.entries(task.metadata ?? {}).filter(([, value]) => {
+    if (value === null || value === undefined || value === "") {
+      return false;
+    }
+    if (Array.isArray(value)) {
+      return value.length > 0;
+    }
+    if (typeof value === "object") {
+      return Object.keys(value as Record<string, unknown>).length > 0;
+    }
+    return true;
+  });
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
@@ -96,6 +110,26 @@ export default function TaskDetailScreen() {
             <Text style={styles.value}>{task.patient_name}</Text>
           </View>
         ) : null}
+        {task.due_at ? (
+          <View style={styles.rowBetween}>
+            <Text style={styles.label}>Due</Text>
+            <Text
+              style={[
+                styles.value,
+                due?.tone === "overdue" ? styles.overdue : null,
+                due?.tone === "dueSoon" ? styles.dueSoon : null,
+              ]}
+            >
+              {due?.label ?? formatDateTime(task.due_at)}
+            </Text>
+          </View>
+        ) : null}
+        {task.completed_at ? (
+          <View style={styles.rowBetween}>
+            <Text style={styles.label}>Completed</Text>
+            <Text style={styles.value}>{formatDateTime(task.completed_at)}</Text>
+          </View>
+        ) : null}
         {task.description ? (
           <View style={styles.notesBlock}>
             <Text style={styles.label}>Notes</Text>
@@ -103,6 +137,30 @@ export default function TaskDetailScreen() {
           </View>
         ) : null}
       </View>
+
+      {task.patient ? (
+        <Pressable
+          onPress={() =>
+            router.push({
+              pathname: "/patients/[id]",
+              params: {
+                id: String(task.patient),
+                ...(task.household_id ? { householdId: String(task.household_id) } : {}),
+              },
+            })
+          }
+          style={styles.linkRow}
+        >
+          <View style={styles.linkIcon}>
+            <UserRound color="#0f766e" size={18} />
+          </View>
+          <View style={styles.linkCopy}>
+            <Text style={styles.linkTitle}>Open patient summary</Text>
+            <Text style={styles.linkSubtitle}>Review risk, clinical context, and household link.</Text>
+          </View>
+          <ArrowRight color="#64748b" size={18} />
+        </Pressable>
+      ) : null}
 
       {task.household_id ? (
         <Pressable
@@ -120,8 +178,26 @@ export default function TaskDetailScreen() {
         </Pressable>
       ) : null}
 
+      {metadataEntries.length > 0 ? (
+        <View style={styles.metadataBlock}>
+          <View style={styles.sectionHeader}>
+            <FileJson color="#0f766e" size={18} />
+            <Text style={styles.sectionTitle}>Task metadata</Text>
+          </View>
+          {metadataEntries.map(([key, value]) => (
+            <View key={key} style={styles.rowBetween}>
+              <Text style={styles.label}>{formatLabel(key)}</Text>
+              <Text style={styles.value}>{compactValue(value)}</Text>
+            </View>
+          ))}
+        </View>
+      ) : null}
+
       <View style={styles.statusBlock}>
-        <Text style={styles.sectionTitle}>Update task status</Text>
+        <View style={styles.sectionHeader}>
+          <CalendarClock color="#0f766e" size={18} />
+          <Text style={styles.sectionTitle}>Update task status</Text>
+        </View>
         <View style={styles.statusGrid}>
           {TASK_STATUS_OPTIONS.map((status) => {
             const selected = status === task.status;
@@ -157,13 +233,6 @@ export default function TaskDetailScreen() {
       </View>
     </ScrollView>
   );
-}
-
-function formatLabel(value: string): string {
-  return value
-    .split("_")
-    .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
-    .join(" ");
 }
 
 const styles = StyleSheet.create({
@@ -211,6 +280,14 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#0f172a",
   },
+  dueSoon: {
+    color: "#92400e",
+    fontWeight: "700",
+  },
+  overdue: {
+    color: "#b91c1c",
+    fontWeight: "700",
+  },
   notesBlock: {
     gap: 8,
   },
@@ -253,6 +330,19 @@ const styles = StyleSheet.create({
   },
   statusBlock: {
     gap: 12,
+  },
+  metadataBlock: {
+    gap: 12,
+    padding: 16,
+    borderRadius: 8,
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
   },
   sectionTitle: {
     fontSize: 16,

@@ -61,7 +61,6 @@ The frontend is still missing several important layers:
 
 - offline-first storage and sync queue
 - mobile notifications/inbox UI
-- patient summary view
 - analytics/dashboard frontend
 - clinician/admin web app
 - frontend test coverage
@@ -107,11 +106,11 @@ Delivered:
 
 ## Phase 11 - CHW workflow completion
 
-**Status:** planned
+**Status:** completed
 
 Goal: complete the first practical field workflow loop.
 
-Build:
+Delivered:
 
 1. **Patient summary screen**
    - index patient identity/context

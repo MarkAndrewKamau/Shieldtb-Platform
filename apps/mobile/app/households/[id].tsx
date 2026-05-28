@@ -1,15 +1,16 @@
 import type { HouseholdContactStatus } from "@shieldtb/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Redirect, useLocalSearchParams } from "expo-router";
-import { MapPinned } from "lucide-react-native";
+import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
+import { Check, MapPinned, Navigation, Phone, Plus, UserRound, X } from "lucide-react-native";
 import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 import { EmptyState } from "../../src/components/EmptyState";
 import { LoadingBlock } from "../../src/components/LoadingBlock";
 import { ScreenHeader } from "../../src/components/ScreenHeader";
 import { StatusBadge } from "../../src/components/StatusBadge";
 import { apiClient } from "../../src/lib/api";
+import { formatLabel } from "../../src/lib/format";
 import { useAuthStore } from "../../src/stores/auth";
 
 const CONTACT_STATUS_OPTIONS: HouseholdContactStatus[] = [
@@ -21,12 +22,32 @@ const CONTACT_STATUS_OPTIONS: HouseholdContactStatus[] = [
   "completed",
 ];
 
+type ContactForm = {
+  fullName: string;
+  ageYears: string;
+  phone: string;
+  relationship: string;
+  immunocompromised: boolean;
+};
+
+const EMPTY_CONTACT_FORM: ContactForm = {
+  fullName: "",
+  ageYears: "",
+  phone: "",
+  relationship: "",
+  immunocompromised: false,
+};
+
 export default function HouseholdDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
+  const router = useRouter();
   const queryClient = useQueryClient();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
   const authorizedCall = useAuthStore((state) => state.authorizedCall);
   const [expandedContactId, setExpandedContactId] = useState<number | null>(null);
+  const [isAddingContact, setIsAddingContact] = useState(false);
+  const [contactForm, setContactForm] = useState<ContactForm>(EMPTY_CONTACT_FORM);
+  const [contactFormError, setContactFormError] = useState<string | null>(null);
   const householdId = Number(params.id);
 
   const householdQuery = useQuery({
@@ -39,6 +60,34 @@ export default function HouseholdDetailScreen() {
     mutationFn: ({ id, status }: { id: number; status: HouseholdContactStatus }) =>
       authorizedCall((accessToken) => apiClient.updateHouseholdContactStatus(id, status, accessToken)),
     onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ["household", householdId] });
+      void queryClient.invalidateQueries({ queryKey: ["workflow-task"] });
+      void queryClient.invalidateQueries({ queryKey: ["workflow-tasks"] });
+    },
+  });
+
+  const createContactMutation = useMutation({
+    mutationFn: () => {
+      const ageYears = contactForm.ageYears.trim();
+      return authorizedCall((accessToken) =>
+        apiClient.createHouseholdContact(
+          {
+            household: householdId,
+            full_name: contactForm.fullName.trim(),
+            age_years: ageYears ? Number(ageYears) : null,
+            phone: contactForm.phone.trim(),
+            relationship_to_index: contactForm.relationship.trim(),
+            immunocompromised: contactForm.immunocompromised,
+            status: "pending",
+          },
+          accessToken,
+        ),
+      );
+    },
+    onSuccess: () => {
+      setContactForm(EMPTY_CONTACT_FORM);
+      setContactFormError(null);
+      setIsAddingContact(false);
       void queryClient.invalidateQueries({ queryKey: ["household", householdId] });
       void queryClient.invalidateQueries({ queryKey: ["workflow-task"] });
       void queryClient.invalidateQueries({ queryKey: ["workflow-tasks"] });
@@ -63,6 +112,22 @@ export default function HouseholdDetailScreen() {
   }
 
   const household = householdQuery.data;
+  const progress = screeningProgress(household.contacts);
+  const canOpenMap = Boolean(household.latitude && household.longitude);
+
+  const submitContact = () => {
+    const fullName = contactForm.fullName.trim();
+    if (!fullName) {
+      setContactFormError("Full name is required.");
+      return;
+    }
+    if (contactForm.ageYears.trim() && !/^\d+$/.test(contactForm.ageYears.trim())) {
+      setContactFormError("Age must be a whole number.");
+      return;
+    }
+    setContactFormError(null);
+    createContactMutation.mutate();
+  };
 
   return (
     <ScrollView style={styles.scroll} contentContainerStyle={styles.content}>
@@ -72,6 +137,19 @@ export default function HouseholdDetailScreen() {
       />
 
       <View style={styles.summaryBlock}>
+        <View style={styles.progressBlock}>
+          <View style={styles.rowBetween}>
+            <Text style={styles.sectionLabel}>Screening progress</Text>
+            <Text style={styles.progressCount}>
+              {progress.complete} / {progress.total} complete
+            </Text>
+          </View>
+          <View style={styles.progressTrack}>
+            <View style={[styles.progressFill, { width: `${progress.percent}%` }]} />
+          </View>
+          <Text style={styles.progressText}>{progress.label}</Text>
+        </View>
+
         <View style={styles.locationRow}>
           <View style={styles.mapIcon}>
             <MapPinned color="#0f766e" size={18} />
@@ -97,10 +175,137 @@ export default function HouseholdDetailScreen() {
             <Text style={styles.addressText}>{household.address_description}</Text>
           </View>
         ) : null}
+
+        <View style={styles.actionGrid}>
+          {household.index_patient ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() =>
+                router.push({
+                  pathname: "/patients/[id]",
+                  params: { id: String(household.index_patient), householdId: String(household.id) },
+                })
+              }
+              style={({ pressed }) => [styles.actionButton, pressed ? styles.actionPressed : null]}
+            >
+              <UserRound color="#0f766e" size={18} />
+              <Text style={styles.actionText}>Patient</Text>
+            </Pressable>
+          ) : null}
+          {canOpenMap ? (
+            <Pressable
+              accessibilityRole="button"
+              onPress={() =>
+                Linking.openURL(`geo:${household.latitude},${household.longitude}`)
+              }
+              style={({ pressed }) => [styles.actionButton, pressed ? styles.actionPressed : null]}
+            >
+              <Navigation color="#0f766e" size={18} />
+              <Text style={styles.actionText}>Map</Text>
+            </Pressable>
+          ) : null}
+        </View>
       </View>
 
       <View style={styles.contactsBlock}>
-        <Text style={styles.sectionTitle}>Household contacts</Text>
+        <View style={styles.contactsHeader}>
+          <Text style={styles.sectionTitle}>Household contacts</Text>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => {
+              setIsAddingContact((value) => !value);
+              setContactFormError(null);
+            }}
+            style={({ pressed }) => [styles.addButton, pressed ? styles.addButtonPressed : null]}
+          >
+            {isAddingContact ? <X color="#0f172a" size={16} /> : <Plus color="#0f172a" size={16} />}
+            <Text style={styles.addButtonText}>{isAddingContact ? "Cancel" : "Add"}</Text>
+          </Pressable>
+        </View>
+
+        {isAddingContact ? (
+          <View style={styles.addContactBlock}>
+            <TextInput
+              autoCapitalize="words"
+              onChangeText={(value) => setContactForm((form) => ({ ...form, fullName: value }))}
+              placeholder="Full name"
+              placeholderTextColor="#94a3b8"
+              style={styles.input}
+              value={contactForm.fullName}
+            />
+            <View style={styles.formRow}>
+              <TextInput
+                keyboardType="number-pad"
+                onChangeText={(value) => setContactForm((form) => ({ ...form, ageYears: value }))}
+                placeholder="Age"
+                placeholderTextColor="#94a3b8"
+                style={[styles.input, styles.inputHalf]}
+                value={contactForm.ageYears}
+              />
+              <TextInput
+                keyboardType="phone-pad"
+                onChangeText={(value) => setContactForm((form) => ({ ...form, phone: value }))}
+                placeholder="Phone"
+                placeholderTextColor="#94a3b8"
+                style={[styles.input, styles.inputHalf]}
+                value={contactForm.phone}
+              />
+            </View>
+            <TextInput
+              autoCapitalize="words"
+              onChangeText={(value) => setContactForm((form) => ({ ...form, relationship: value }))}
+              placeholder="Relationship to index patient"
+              placeholderTextColor="#94a3b8"
+              style={styles.input}
+              value={contactForm.relationship}
+            />
+            <Pressable
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: contactForm.immunocompromised }}
+              onPress={() =>
+                setContactForm((form) => ({
+                  ...form,
+                  immunocompromised: !form.immunocompromised,
+                }))
+              }
+              style={styles.checkboxRow}
+            >
+              <View
+                style={[
+                  styles.checkbox,
+                  contactForm.immunocompromised ? styles.checkboxChecked : null,
+                ]}
+              >
+                {contactForm.immunocompromised ? <Check color="#ffffff" size={14} /> : null}
+              </View>
+              <Text style={styles.checkboxText}>Immunocompromised</Text>
+            </Pressable>
+
+            {contactFormError || createContactMutation.error ? (
+              <Text style={styles.errorText}>
+                {contactFormError ??
+                  (createContactMutation.error instanceof Error
+                    ? createContactMutation.error.message
+                    : "Could not add household contact.")}
+              </Text>
+            ) : null}
+
+            <Pressable
+              accessibilityRole="button"
+              disabled={createContactMutation.isPending}
+              onPress={submitContact}
+              style={[
+                styles.submitButton,
+                createContactMutation.isPending ? styles.submitButtonDisabled : null,
+              ]}
+            >
+              <Text style={styles.submitButtonText}>
+                {createContactMutation.isPending ? "Adding..." : "Add contact"}
+              </Text>
+            </Pressable>
+          </View>
+        ) : null}
+
         {household.contacts.length === 0 ? (
           <EmptyState
             title="No contacts recorded"
@@ -126,35 +331,70 @@ export default function HouseholdDetailScreen() {
                     {contact.immunocompromised ? (
                       <Text style={styles.contactFlag}>Immunocompromised</Text>
                     ) : null}
+                    {contact.phone ? <Text style={styles.contactMeta}>{contact.phone}</Text> : null}
                   </View>
                   <StatusBadge value={contact.status} />
                 </Pressable>
 
                 {isExpanded ? (
-                  <View style={styles.statusPicker}>
-                    {CONTACT_STATUS_OPTIONS.map((status) => {
-                      const selected = status === contact.status;
-                      return (
+                  <View style={styles.contactDetail}>
+                    <View style={styles.contactActions}>
+                      {contact.phone ? (
                         <Pressable
-                          key={status}
-                          disabled={updateContactMutation.isPending}
-                          onPress={() => updateContactMutation.mutate({ id: contact.id, status })}
-                          style={[
-                            styles.statusOption,
-                            selected ? styles.statusOptionSelected : null,
-                          ]}
+                          accessibilityRole="button"
+                          onPress={() => Linking.openURL(`tel:${contact.phone}`)}
+                          style={styles.smallAction}
                         >
-                          <Text
+                          <Phone color="#0f766e" size={16} />
+                          <Text style={styles.smallActionText}>Call</Text>
+                        </Pressable>
+                      ) : null}
+                      {contact.patient ? (
+                        <Pressable
+                          accessibilityRole="button"
+                          onPress={() =>
+                            router.push({
+                              pathname: "/patients/[id]",
+                              params: {
+                                id: String(contact.patient),
+                                householdId: String(household.id),
+                              },
+                            })
+                          }
+                          style={styles.smallAction}
+                        >
+                          <UserRound color="#0f766e" size={16} />
+                          <Text style={styles.smallActionText}>Patient</Text>
+                        </Pressable>
+                      ) : null}
+                    </View>
+
+                    <Text style={styles.statusHelp}>Screening state</Text>
+                    <View style={styles.statusPicker}>
+                      {CONTACT_STATUS_OPTIONS.map((status) => {
+                        const selected = status === contact.status;
+                        return (
+                          <Pressable
+                            key={status}
+                            disabled={updateContactMutation.isPending}
+                            onPress={() => updateContactMutation.mutate({ id: contact.id, status })}
                             style={[
-                              styles.statusOptionText,
-                              selected ? styles.statusOptionTextSelected : null,
+                              styles.statusOption,
+                              selected ? styles.statusOptionSelected : null,
                             ]}
                           >
-                            {formatLabel(status)}
-                          </Text>
-                        </Pressable>
-                      );
-                    })}
+                            <Text
+                              style={[
+                                styles.statusOptionText,
+                                selected ? styles.statusOptionTextSelected : null,
+                              ]}
+                            >
+                              {formatLabel(status)}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
                   </View>
                 ) : null}
               </View>
@@ -174,11 +414,28 @@ export default function HouseholdDetailScreen() {
   );
 }
 
-function formatLabel(value: string): string {
-  return value
-    .split("_")
-    .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
-    .join(" ");
+function screeningProgress(contacts: Array<{ status: HouseholdContactStatus }>): {
+  complete: number;
+  total: number;
+  percent: number;
+  label: string;
+} {
+  const total = contacts.length;
+  const complete = contacts.filter((contact) =>
+    ["screened", "referred", "started_tpt", "completed"].includes(contact.status),
+  ).length;
+  const missed = contacts.filter((contact) => contact.status === "missed_follow_up").length;
+  const percent = total > 0 ? Math.round((complete / total) * 100) : 0;
+  if (total === 0) {
+    return { complete, total, percent, label: "Add contacts to begin household screening." };
+  }
+  if (complete === total) {
+    return { complete, total, percent, label: "All listed contacts have a screening outcome." };
+  }
+  if (missed > 0) {
+    return { complete, total, percent, label: `${missed} contact needs follow-up recovery.` };
+  }
+  return { complete, total, percent, label: "Screen or refer remaining household contacts." };
 }
 
 const styles = StyleSheet.create({
@@ -198,6 +455,36 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     borderWidth: 1,
     borderColor: "#e2e8f0",
+  },
+  progressBlock: {
+    gap: 8,
+  },
+  rowBetween: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+    alignItems: "center",
+  },
+  progressCount: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#0f172a",
+  },
+  progressTrack: {
+    height: 8,
+    borderRadius: 999,
+    overflow: "hidden",
+    backgroundColor: "#e2e8f0",
+  },
+  progressFill: {
+    height: "100%",
+    borderRadius: 999,
+    backgroundColor: "#0f766e",
+  },
+  progressText: {
+    fontSize: 13,
+    lineHeight: 18,
+    color: "#475569",
   },
   locationRow: {
     flexDirection: "row",
@@ -238,13 +525,130 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     color: "#1e293b",
   },
+  actionGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  actionButton: {
+    minHeight: 44,
+    flexGrow: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#cbd5e1",
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 12,
+  },
+  actionPressed: {
+    backgroundColor: "#f0fdfa",
+  },
+  actionText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#0f172a",
+  },
   contactsBlock: {
+    gap: 12,
+  },
+  contactsHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     gap: 12,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
     color: "#0f172a",
+  },
+  addButton: {
+    minHeight: 36,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#cbd5e1",
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 12,
+  },
+  addButtonPressed: {
+    backgroundColor: "#f8fafc",
+  },
+  addButtonText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#0f172a",
+  },
+  addContactBlock: {
+    gap: 10,
+    padding: 14,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    backgroundColor: "#ffffff",
+  },
+  formRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  input: {
+    minHeight: 46,
+    borderWidth: 1,
+    borderColor: "#cbd5e1",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    backgroundColor: "#ffffff",
+    fontSize: 15,
+    color: "#0f172a",
+  },
+  inputHalf: {
+    flex: 1,
+  },
+  checkboxRow: {
+    minHeight: 42,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  checkbox: {
+    width: 22,
+    height: 22,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: "#94a3b8",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#ffffff",
+  },
+  checkboxChecked: {
+    borderColor: "#0f766e",
+    backgroundColor: "#0f766e",
+  },
+  checkboxText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#334155",
+  },
+  submitButton: {
+    minHeight: 46,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 8,
+    backgroundColor: "#0f766e",
+  },
+  submitButtonDisabled: {
+    opacity: 0.65,
+  },
+  submitButtonText: {
+    color: "#ffffff",
+    fontSize: 15,
+    fontWeight: "700",
   },
   contactRow: {
     borderRadius: 8,
@@ -277,12 +681,42 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#b45309",
   },
+  contactDetail: {
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+  },
+  contactActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  smallAction: {
+    minHeight: 36,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#cbd5e1",
+    backgroundColor: "#ffffff",
+    paddingHorizontal: 10,
+  },
+  smallActionText: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#0f172a",
+  },
+  statusHelp: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#64748b",
+  },
   statusPicker: {
     flexDirection: "row",
     flexWrap: "wrap",
     gap: 10,
-    paddingHorizontal: 16,
-    paddingBottom: 16,
   },
   statusOption: {
     minWidth: "47%",
