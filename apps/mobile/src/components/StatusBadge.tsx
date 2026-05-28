@@ -11,6 +11,10 @@ const palette: Record<string, { bg: string; fg: string }> = {
   referred: { bg: "#fef3c7", fg: "#92400e" },
   started_tpt: { bg: "#ede9fe", fg: "#6d28d9" },
   missed_follow_up: { bg: "#fee2e2", fg: "#b91c1c" },
+  low: { bg: "#dcfce7", fg: "#166534" },
+  moderate: { bg: "#fef3c7", fg: "#92400e" },
+  high: { bg: "#ffedd5", fg: "#c2410c" },
+  critical: { bg: "#fee2e2", fg: "#b91c1c" },
 };
 
 type StatusBadgeProps = {
