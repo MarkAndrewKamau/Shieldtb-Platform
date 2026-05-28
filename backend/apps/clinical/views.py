@@ -1,4 +1,4 @@
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import mixins, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -10,7 +10,18 @@ from apps.clinical.serializers import ClinicalEncounterSerializer, IntakeCreateS
 
 
 @extend_schema_view(
-    list=extend_schema(tags=["Clinical"], summary="List clinical encounters"),
+    list=extend_schema(
+        tags=["Clinical"],
+        summary="List clinical encounters",
+        parameters=[
+            OpenApiParameter(
+                name="patient",
+                description="Filter encounters by patient ID.",
+                required=False,
+                type=int,
+            )
+        ],
+    ),
     retrieve=extend_schema(tags=["Clinical"], summary="Retrieve clinical encounter"),
 )
 class ClinicalEncounterViewSet(viewsets.ReadOnlyModelViewSet):
@@ -25,7 +36,11 @@ class ClinicalEncounterViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return scoped_facility_queryset(self.request.user, self.queryset)
+        queryset = scoped_facility_queryset(self.request.user, self.queryset)
+        patient_id = self.request.query_params.get("patient")
+        if patient_id:
+            queryset = queryset.filter(patient_id=patient_id)
+        return queryset
 
 
 @extend_schema_view(
