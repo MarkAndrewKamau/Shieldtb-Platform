@@ -48,6 +48,7 @@ export default function RootLayout() {
           <Stack.Screen name="tasks/index" options={{ title: "My tasks" }} />
           <Stack.Screen name="tasks/[id]" options={{ title: "Task detail" }} />
           <Stack.Screen name="households/[id]" options={{ title: "Household" }} />
+          <Stack.Screen name="patients/[id]" options={{ title: "Patient summary" }} />
         </Stack>
       </QueryClientProvider>
     </SafeAreaProvider>
