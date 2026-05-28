@@ -66,6 +66,79 @@ export interface RefreshResponse {
   refresh?: string;
 }
 
+export type PatientSex = "female" | "male" | "intersex" | "unknown";
+
+export interface Patient {
+  id: number;
+  external_id: string | null;
+  given_name: string;
+  family_name: string;
+  full_name: string;
+  date_of_birth: string | null;
+  sex: PatientSex;
+  phone: string;
+  facility: number;
+  enrollment_source: string;
+  consented_at: string | null;
+  consent_recorded_by: number | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ClinicalIntake {
+  id: number;
+  cough: boolean;
+  fever: boolean;
+  night_sweats: boolean;
+  weight_loss: boolean;
+  hiv_positive: boolean;
+  pregnant: boolean;
+  postpartum: boolean;
+  diabetes: boolean;
+  sle_or_autoimmune: boolean;
+  ckd: boolean;
+  on_immunosuppressants: boolean;
+  previous_tb: boolean;
+  household_tb_contact: boolean;
+  crowded_housing: boolean;
+  poor_ventilation: boolean;
+  medication_history: Record<string, unknown>;
+  has_who_tb_symptom: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export type RiskTier = "low" | "moderate" | "high" | "critical";
+
+export interface RiskAssessment {
+  id: number;
+  patient: number;
+  patient_name: string;
+  encounter: number;
+  score: number;
+  tier: RiskTier;
+  explanation: Record<string, unknown>;
+  model_version: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ClinicalEncounter {
+  id: number;
+  patient: number;
+  patient_name: string;
+  facility: number;
+  encounter_type: string;
+  recorded_by: number;
+  occurred_at: string;
+  notes: string;
+  intake?: ClinicalIntake | null;
+  risk_assessment?: RiskAssessment | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export type WorkflowTaskStatus =
   | "open"
   | "in_progress"
@@ -121,6 +194,17 @@ export interface HouseholdContact {
   status: HouseholdContactStatus;
   created_at: string;
   updated_at: string;
+}
+
+export interface CreateHouseholdContactRequest {
+  household: number;
+  patient?: number | null;
+  full_name: string;
+  age_years?: number | null;
+  phone?: string;
+  relationship_to_index?: string;
+  immunocompromised?: boolean;
+  status?: HouseholdContactStatus;
 }
 
 export interface Household {
