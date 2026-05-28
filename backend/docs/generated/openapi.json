@@ -538,6 +538,16 @@
       "get": {
         "operationId": "clinical_encounters_list",
         "summary": "List clinical encounters",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "patient",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filter encounters by patient ID."
+          }
+        ],
         "tags": [
           "Clinical"
         ],
@@ -1965,6 +1975,16 @@
       "get": {
         "operationId": "risk_assessments_list",
         "summary": "List risk assessments",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "patient",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Filter risk assessments by patient ID."
+          }
+        ],
         "tags": [
           "Risk"
         ],
