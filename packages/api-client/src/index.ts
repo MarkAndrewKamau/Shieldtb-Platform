@@ -1,15 +1,19 @@
 import type {
   AuthEnvelope,
+  ClinicalEncounter,
   FacilitySummary,
   Household,
   HouseholdContact,
   HouseholdContactStatus,
   LoginRequest,
   Notification,
+  Patient,
   RefreshRequest,
   RefreshResponse,
+  RiskAssessment,
   SignupRequest,
   User,
+  CreateHouseholdContactRequest,
   WorkflowTask,
   WorkflowTaskStatus,
 } from "@shieldtb/types";
@@ -90,6 +94,30 @@ export class ShieldTBApiClient {
     return this.request<FacilitySummary[]>("/api/v1/facilities/", { accessToken });
   }
 
+  async getPatient(id: number, accessToken: string): Promise<Patient> {
+    return this.request<Patient>(`/api/v1/patients/${id}/`, { accessToken });
+  }
+
+  async listClinicalEncounters(
+    accessToken: string,
+    filters: { patient?: number } = {},
+  ): Promise<ClinicalEncounter[]> {
+    return this.request<ClinicalEncounter[]>(
+      `/api/v1/clinical/encounters/${queryString(filters)}`,
+      { accessToken },
+    );
+  }
+
+  async listRiskAssessments(
+    accessToken: string,
+    filters: { patient?: number } = {},
+  ): Promise<RiskAssessment[]> {
+    return this.request<RiskAssessment[]>(
+      `/api/v1/risk-assessments/${queryString(filters)}`,
+      { accessToken },
+    );
+  }
+
   async listWorkflowTasks(accessToken: string): Promise<WorkflowTask[]> {
     return this.request<WorkflowTask[]>("/api/v1/workflow-tasks/", { accessToken });
   }
@@ -112,6 +140,26 @@ export class ShieldTBApiClient {
 
   async getHousehold(id: number, accessToken: string): Promise<Household> {
     return this.request<Household>(`/api/v1/households/${id}/`, { accessToken });
+  }
+
+  async createHouseholdContact(
+    payload: CreateHouseholdContactRequest,
+    accessToken: string,
+  ): Promise<HouseholdContact> {
+    return this.request<HouseholdContact>("/api/v1/household-contacts/", {
+      method: "POST",
+      accessToken,
+      body: {
+        household: payload.household,
+        patient: payload.patient ?? null,
+        full_name: payload.full_name,
+        age_years: payload.age_years ?? null,
+        phone: payload.phone ?? "",
+        relationship_to_index: payload.relationship_to_index ?? "",
+        immunocompromised: payload.immunocompromised ?? false,
+        status: payload.status ?? "pending",
+      },
+    });
   }
 
   async updateHouseholdContactStatus(
@@ -164,6 +212,19 @@ export class ShieldTBApiClient {
 
     return data as T;
   }
+}
+
+function queryString(filters: Record<string, string | number | undefined>): string {
+  const params = Object.entries(filters).filter((entry): entry is [string, string | number] =>
+    entry[1] !== undefined,
+  );
+  if (params.length === 0) {
+    return "";
+  }
+  const search = params
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
+    .join("&");
+  return `?${search}`;
 }
 
 function tryParseJson(rawText: string): unknown {
