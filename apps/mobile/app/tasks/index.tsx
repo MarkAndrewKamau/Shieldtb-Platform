@@ -53,6 +53,10 @@ export default function TaskListScreen() {
     return <Redirect href="/login" />;
   }
 
+  if (!isAuthenticated) {
+    return <Redirect href="/login" />;
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <FlatList
