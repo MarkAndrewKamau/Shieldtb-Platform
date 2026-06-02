@@ -27,6 +27,7 @@ class NotificationSerializer(serializers.ModelSerializer):
             "failure_reason",
             "scheduled_for",
             "sent_at",
+            "read_at",
             "created_at",
             "updated_at",
         ]
