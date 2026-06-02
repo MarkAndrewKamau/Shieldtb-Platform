@@ -1,5 +1,8 @@
+from django.utils import timezone
 from drf_spectacular.utils import extend_schema, extend_schema_view
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 from rest_framework.viewsets import ReadOnlyModelViewSet
 
 from apps.notifications.models import Notification
@@ -18,3 +21,16 @@ class NotificationViewSet(ReadOnlyModelViewSet):
 
     def get_queryset(self):
         return scoped_notification_queryset(self.request.user, self.queryset)
+
+    @extend_schema(
+        tags=["Notifications"],
+        responses={200: NotificationSerializer},
+        summary="Mark notification read",
+    )
+    @action(detail=True, methods=["post"])
+    def mark_read(self, request, pk=None):
+        notification = self.get_object()
+        if not notification.read_at:
+            notification.read_at = timezone.now()
+            notification.save(update_fields=["read_at", "updated_at"])
+        return Response(NotificationSerializer(notification).data)
