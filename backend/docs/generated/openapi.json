@@ -1670,6 +1670,52 @@
         }
       }
     },
+    "/api/v1/notifications/{id}/mark_read/": {
+      "post": {
+        "operationId": "notifications_mark_read_create",
+        "summary": "Mark notification read",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this notification.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "Notifications"
+        ],
+        "security": [
+          {
+            "BearerAuth": []
+          },
+          {
+            "jwtAuth": []
+          },
+          {
+            "cookieAuth": []
+          },
+          {
+            "BearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Notification"
+                }
+              }
+            },
+            "description": ""
+          }
+        }
+      }
+    },
     "/api/v1/patients/": {
       "get": {
         "operationId": "patients_list",
@@ -3736,6 +3782,12 @@
             "readOnly": true,
             "nullable": true
           },
+          "read_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "nullable": true
+          },
           "created_at": {
             "type": "string",
             "format": "date-time",
@@ -3756,6 +3808,7 @@
           "patient_name",
           "payload",
           "provider_message_id",
+          "read_at",
           "recipient",
           "recipient_user",
           "recipient_user_name",
