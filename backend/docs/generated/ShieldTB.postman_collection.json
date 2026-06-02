@@ -2062,6 +2062,33 @@
             "description": ""
           },
           "response": []
+        },
+        {
+          "name": "Mark notification read",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/notifications/{{id}}/mark_read/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "notifications",
+                "{{id}}",
+                "mark_read"
+              ]
+            },
+            "description": ""
+          },
+          "response": []
         }
       ]
     },
