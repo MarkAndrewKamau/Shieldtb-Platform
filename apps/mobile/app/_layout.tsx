@@ -45,6 +45,8 @@ export default function RootLayout() {
           <Stack.Screen name="login" options={{ headerShown: false }} />
           <Stack.Screen name="signup" options={{ headerShown: false }} />
           <Stack.Screen name="account" options={{ title: "Account" }} />
+          <Stack.Screen name="notifications/index" options={{ title: "Inbox" }} />
+          <Stack.Screen name="notifications/[id]" options={{ title: "Notification" }} />
           <Stack.Screen name="tasks/index" options={{ title: "My tasks" }} />
           <Stack.Screen name="tasks/[id]" options={{ title: "Task detail" }} />
           <Stack.Screen name="households/[id]" options={{ title: "Household" }} />
