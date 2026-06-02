@@ -60,7 +60,6 @@ The following work is already done:
 The frontend is still missing several important layers:
 
 - offline-first storage and sync queue
-- mobile notifications/inbox UI
 - analytics/dashboard frontend
 - clinician/admin web app
 - frontend test coverage
@@ -129,11 +128,11 @@ Delivered:
 
 ## Phase 12 - Mobile notifications and in-app awareness
 
-**Status:** planned
+**Status:** completed
 
 Goal: expose the backend notification model inside the mobile client.
 
-Build:
+Delivered:
 
 1. **Notification inbox**
    - notification list
