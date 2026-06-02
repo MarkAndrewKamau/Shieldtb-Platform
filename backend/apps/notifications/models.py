@@ -42,6 +42,7 @@ class Notification(TimeStampedModel):
     failure_reason = models.CharField(max_length=255, blank=True)
     scheduled_for = models.DateTimeField(null=True, blank=True)
     sent_at = models.DateTimeField(null=True, blank=True)
+    read_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         ordering = ["status", "scheduled_for", "-created_at"]
