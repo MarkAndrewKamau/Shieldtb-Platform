@@ -220,3 +220,24 @@ def test_clinician_can_list_facility_notifications(notification_entities):
 
     assert response.status_code == 200
     assert [item["id"] for item in response.data] == [own_notification.id]
+
+
+@pytest.mark.django_db
+def test_chw_can_mark_own_notification_read(notification_entities):
+    (
+        _clinician,
+        chw,
+        _other_chw,
+        _patient,
+        own_notification,
+        _other_notification,
+    ) = notification_entities
+    client = APIClient()
+    client.force_authenticate(chw)
+
+    response = client.post(reverse("notification-mark-read", args=[own_notification.id]))
+
+    assert response.status_code == 200
+    assert response.data["read_at"] is not None
+    own_notification.refresh_from_db()
+    assert own_notification.read_at is not None
