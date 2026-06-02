@@ -226,7 +226,7 @@ export interface Household {
   updated_at: string;
 }
 
-export type NotificationStatus = "pending" | "sent" | "failed";
+export type NotificationStatus = "pending" | "sent" | "delivered" | "failed" | "cancelled";
 
 export interface Notification {
   id: number;
@@ -245,6 +245,7 @@ export interface Notification {
   failure_reason: string;
   scheduled_for: string | null;
   sent_at: string | null;
+  read_at: string | null;
   created_at: string;
   updated_at: string;
 }

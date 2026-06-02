@@ -1,7 +1,7 @@
 import type { WorkflowTaskStatus } from "@shieldtb/types";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Redirect, router } from "expo-router";
-import { RefreshCcw, UserRound } from "lucide-react-native";
+import { Bell, RefreshCcw, UserRound } from "lucide-react-native";
 import { useMemo, useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -36,7 +36,14 @@ export default function TaskListScreen() {
     enabled: isAuthenticated,
   });
 
+  const notificationsQuery = useQuery({
+    queryKey: ["notifications"],
+    queryFn: () => authorizedCall((accessToken) => apiClient.listNotifications(accessToken)),
+    enabled: isAuthenticated,
+  });
+
   const assignedCount = tasksQuery.data?.length ?? 0;
+  const unreadCount = notificationsQuery.data?.filter((notification) => !notification.read_at).length ?? 0;
   const filteredTasks = useMemo(() => {
     const tasks = tasksQuery.data ?? [];
     if (filter === "all") {
@@ -44,14 +51,6 @@ export default function TaskListScreen() {
     }
     return tasks.filter((task) => task.status === filter);
   }, [filter, tasksQuery.data]);
-
-  if (!isAuthenticated) {
-    return <Redirect href="/login" />;
-  }
-
-  if (!isAuthenticated) {
-    return <Redirect href="/login" />;
-  }
 
   if (!isAuthenticated) {
     return <Redirect href="/login" />;
@@ -74,6 +73,20 @@ export default function TaskListScreen() {
               }
               actions={
                 <View style={styles.actions}>
+                  <Pressable
+                    accessibilityLabel="Open inbox"
+                    onPress={() => {
+                      router.push("/notifications");
+                    }}
+                    style={styles.iconButton}
+                  >
+                    <Bell color="#0f172a" size={18} />
+                    {unreadCount > 0 ? (
+                      <View style={styles.badge}>
+                        <Text style={styles.badgeText}>{unreadCount > 9 ? "9+" : unreadCount}</Text>
+                      </View>
+                    ) : null}
+                  </Pressable>
                   <Pressable
                     accessibilityLabel="Refresh tasks"
                     onPress={() => {
@@ -175,6 +188,24 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#cbd5e1",
     backgroundColor: "#ffffff",
+    position: "relative",
+  },
+  badge: {
+    minWidth: 18,
+    height: 18,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    position: "absolute",
+    top: -5,
+    right: -5,
+    backgroundColor: "#b91c1c",
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    color: "#ffffff",
+    fontSize: 10,
+    fontWeight: "700",
   },
   separator: {
     height: 12,

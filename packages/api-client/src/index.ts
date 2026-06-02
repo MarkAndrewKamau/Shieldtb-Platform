@@ -178,6 +178,17 @@ export class ShieldTBApiClient {
     return this.request<Notification[]>("/api/v1/notifications/", { accessToken });
   }
 
+  async getNotification(id: number, accessToken: string): Promise<Notification> {
+    return this.request<Notification>(`/api/v1/notifications/${id}/`, { accessToken });
+  }
+
+  async markNotificationRead(id: number, accessToken: string): Promise<Notification> {
+    return this.request<Notification>(`/api/v1/notifications/${id}/mark_read/`, {
+      method: "POST",
+      accessToken,
+    });
+  }
+
   private async request<T>(path: string, options: RequestOptions = {}): Promise<T> {
     const headers: Record<string, string> = {
       Accept: "application/json",
